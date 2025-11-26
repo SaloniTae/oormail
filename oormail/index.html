@@ -36,17 +36,16 @@
 
         .app-wrapper { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; position: relative; }
 
-        /* LOGO */
         .logo-container { display: flex; justify-content: center; margin-bottom: 5px; }
         .logo-img { height: 40px; width: auto; display: block; }
 
-        /* CARD */
+        /* --- CARD --- */
         .card {
             background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 16px; position: relative; overflow: hidden;
         }
         .label-small { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 8px; display: block; }
 
-        /* ADDRESS BOX */
+        /* --- ADDRESS BOX --- */
         .email-box {
             background: #000; border: 1px solid #333; border-radius: 12px; padding: 0 12px; height: 50px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
         }
@@ -62,7 +61,7 @@
         .icon-btn:active { background: rgba(255,255,255,0.3); }
         .icon-btn svg { width: 16px; height: 16px; }
 
-        /* BUTTONS */
+        /* --- CONTROLS --- */
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
         .btn { border: none; border-radius: 10px; padding: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-primary { background: var(--btn-white); color: black; }
@@ -70,7 +69,7 @@
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--danger); }
         .btn:active { transform: scale(0.97); opacity: 0.8; }
 
-        /* EDIT MODE */
+        /* --- EDIT MODE --- */
         #edit-mode { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); animation: fadeIn 0.3s ease; }
         #edit-mode.show { display: block; }
         
@@ -81,7 +80,7 @@
         .domain-chip { background: #222; color: #888; padding: 8px; border-radius: 8px; font-size: 11px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
         .domain-chip.selected { background: var(--btn-white); color: black; border-color: white; font-weight: 700; }
 
-        /* INBOX */
+        /* --- INBOX --- */
         .inbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
         .refresh-pill { font-size: 11px; background: #222; padding: 4px 8px; border-radius: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
         .dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
@@ -101,7 +100,7 @@
         .empty-state { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; width: 100%; }
         .empty-state.hidden { display: none; }
 
-        /* READ VIEW */
+        /* --- READ VIEW --- */
         #view-read { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 50; overflow-y: auto; display: none; padding: 20px; }
         #view-read.active { display: block; animation: slideUp 0.3s ease; }
 
@@ -134,9 +133,11 @@
 
         <!-- HOME VIEW -->
         <div id="view-inbox">
+            
             <!-- ADDRESS CARD -->
             <div class="card" style="margin-bottom: 15px;">
                 <span class="label-small">Current Address</span>
+                
                 <div class="email-box">
                     <div class="email-text-container">
                         <span class="email-text" id="email-addr">Connecting...</span>
@@ -208,8 +209,6 @@
 
     <script>
         const API_URL = "https://tempmail-services.by-oor.workers.dev/ajax.php";
-        
-        // Only domains supported by the set_email_user API
         const DOMAINS = ["sharklasers.com", "guerrillamail.info", "grr.la", "guerrillamail.com", "guerrillamail.net", "pokemail.net"];
 
         let session_id = localStorage.getItem("oor_mail_sid") || "";
@@ -220,24 +219,30 @@
 
         document.getElementById('copyright').innerText = `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
 
-        // --- START ---
         async function init() {
             renderDomainGrid();
-            await getEmailAddress(); 
-            checkInbox(); 
+            // If we have a session, try to recover it
+            if(session_id) {
+                await checkInbox(); // Check inbox first (this validates session)
+                // Get address for display
+                await getEmailAddress(); 
+            } else {
+                await getEmailAddress(); // Create new
+            }
             startCountdown();
         }
 
         // --- API ---
 
-        // 1. Initialize Session
         async function getEmailAddress() {
-            let url = `${API_URL}?f=get_email_address&_t=${Date.now()}`; // Cache Buster
+            // Always attach cache buster
+            let url = `${API_URL}?f=get_email_address&_t=${Date.now()}`;
             if (session_id) url += `&sid=${session_id}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
+
                 if (data.email_addr) {
                     current_email = data.email_addr;
                     if (data.sid_token) {
@@ -251,12 +256,11 @@
             }
         }
 
-        // 2. Set Custom Email
         async function setCustomEmail() {
             const user = document.getElementById('custom-user').value.trim();
             if (!user) return showToast("Enter a username");
 
-            // Use explicitly selected domain from Grid
+            // API Request
             const url = `${API_URL}?f=set_email_user&email_user=${user}&lang=en&site=${selectedDomain}&sid=${session_id}&_t=${Date.now()}`;
             
             try {
@@ -264,35 +268,50 @@
                 const data = await res.json();
                 
                 if(data.email_addr) {
+                    // FORCE DISPLAY UPDATE: Use the constructed email temporarily for better UX
+                    // The API returns 'email_addr' which is usually correct, but sometimes aliases
                     current_email = data.email_addr;
                     session_id = data.sid_token; 
                     localStorage.setItem("oor_mail_sid", session_id);
                     
+                    // UI Update
                     document.getElementById('email-addr').innerText = current_email;
                     toggleEditMode(); 
+                    
+                    // Clear inbox locally before fetch
+                    renderList([]);
                     checkInbox(); 
                     showToast("Address Updated!");
+                } else {
+                    showToast("Update Failed");
                 }
             } catch(e) {
-                showToast("Failed to set address");
+                showToast("Server Error");
             }
         }
 
-        // 3. Check Inbox (Persistent)
         async function checkInbox() {
+            // Logic: Fetch ONLY if session exists
+            // Use get_email_list + offset=0 to force FULL list retrieval
             if (!session_id) return;
 
-            // USE GET_EMAIL_LIST (Offset 0) to ensure we get ALL emails, not just new ones
             const url = `${API_URL}?f=get_email_list&offset=0&sid=${session_id}&_t=${Date.now()}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
+                
+                // Update session if rotated
+                if(data.sid_token && data.sid_token !== session_id) {
+                    session_id = data.sid_token;
+                    localStorage.setItem("oor_mail_sid", session_id);
+                }
+
                 const list = data.list || [];
                 renderList(list);
-            } catch (e) { console.log("Inbox error"); }
+            } catch (e) { console.log("Inbox sync error"); }
             
-            refreshTimer = 10; // Reset countdown visual
+            refreshTimer = 10; 
         }
 
         async function openEmail(id) {
@@ -316,19 +335,20 @@
             } catch (e) { showToast("Failed to load content"); }
         }
 
-        // --- HELPERS ---
-
+        // --- TIMER ---
         function startCountdown() {
             if(countdownId) clearInterval(countdownId);
             countdownId = setInterval(() => {
                 refreshTimer--;
                 document.getElementById('timer-text').innerText = `Update in ${refreshTimer}s`;
                 if(refreshTimer <= 0) {
+                    document.getElementById('timer-text').innerText = `Refreshing...`;
                     checkInbox();
                 }
             }, 1000);
         }
 
+        // --- UI ---
         function renderDomainGrid() {
             const grid = document.getElementById('domain-list');
             grid.innerHTML = "";
@@ -356,16 +376,16 @@
             }
 
             empty.classList.add('hidden');
+            // Compare current DOM with new data to avoid flickering (Simple Diff)
+            // Actually, simpler to just rebuild for this scale
             ul.innerHTML = ""; 
 
             emails.forEach(mail => {
                 const li = document.createElement('li');
                 const isUnread = mail.mail_read == 0;
-                
                 li.id = `mail-${mail.mail_id}`;
                 li.className = `email-item ${isUnread ? 'unread' : 'read'}`;
                 li.onclick = () => openEmail(mail.mail_id);
-
                 li.innerHTML = `
                     <div class="meta-row">
                         <span class="sender">${mail.mail_from}</span>
