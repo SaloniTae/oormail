@@ -36,11 +36,10 @@
 
         .app-wrapper { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; position: relative; }
 
-        /* --- LOGO --- */
         .logo-container { display: flex; justify-content: center; margin-bottom: 5px; }
         .logo-img { height: 40px; width: auto; display: block; }
 
-        /* --- CARD STYLES --- */
+        /* --- CARD --- */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -54,12 +53,12 @@
             font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 8px; display: block;
         }
 
-        /* --- EMAIL ADDRESS BOX (Fixed Mobile Layout) --- */
+        /* --- EMAIL ADDRESS BAR --- */
         .email-box {
             background: #000;
             border: 1px solid #333;
             border-radius: 12px;
-            padding: 0 12px; /* Padding handling */
+            padding: 0 12px; 
             height: 50px;
             display: flex;
             justify-content: space-between;
@@ -69,10 +68,9 @@
         
         .email-text-container {
             flex: 1;
-            overflow-x: auto; /* Allows scrolling if too long */
+            overflow-x: auto; 
             white-space: nowrap;
             margin-right: 10px;
-            /* Hide scrollbar */
             -ms-overflow-style: none; 
             scrollbar-width: none; 
         }
@@ -82,16 +80,15 @@
             font-family: monospace;
             font-size: 15px;
             color: white;
-            line-height: 50px; /* Vertically center text */
+            line-height: 50px;
         }
 
         .icon-btn {
-            background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; cursor: pointer; padding: 6px; display: flex; align-items: center; transition: 0.2s; flex-shrink: 0; height: 32px; width: 32px; justify-content: center;
+            background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; cursor: pointer; padding: 0; display: flex; align-items: center; transition: 0.2s; flex-shrink: 0; height: 32px; width: 32px; justify-content: center;
         }
         .icon-btn:active { background: rgba(255,255,255,0.3); }
         .icon-btn svg { width: 16px; height: 16px; }
 
-        /* --- ACTION BUTTONS --- */
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
         
         .btn {
@@ -102,7 +99,7 @@
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--danger); }
         .btn:active { transform: scale(0.97); opacity: 0.8; }
 
-        /* --- CUSTOM UI (Edit Mode) --- */
+        /* --- EDIT MODE --- */
         #edit-mode { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); animation: fadeIn 0.3s ease; }
         #edit-mode.show { display: block; }
         
@@ -110,9 +107,7 @@
         input.custom-input {
             background: #000; color: white; border: 1px solid #333; padding: 12px; border-radius: 10px; font-size: 14px; width: 100%; outline: none;
         }
-        input.custom-input:focus { border-color: #666; }
-
-        /* Domain Grid */
+        
         .domain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
         .domain-chip {
             background: #222; color: #888; padding: 8px; border-radius: 8px; font-size: 11px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s;
@@ -141,15 +136,9 @@
             cursor: pointer;
             transition: 0.2s;
             border: 1px solid transparent;
-            position: relative;
-            overflow: hidden;
         }
         .email-item:active { background: rgba(255,255,255,0.08); }
-        
-        /* Unread State */
         .email-item.unread { background: rgba(10, 132, 255, 0.08); border-left: 3px solid var(--accent); }
-        .email-item.unread .subject { font-weight: 700; color: white; }
-        .email-item.unread .sender { color: white; }
         
         .meta-row { display: flex; justify-content: space-between; margin-bottom: 4px; align-items: baseline; }
         .sender { font-weight: 600; font-size: 14px; color: #ddd; max-width: 65%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -157,7 +146,6 @@
         .subject { font-size: 13px; color: #ccc; margin-bottom: 4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .snippet { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 
-        /* --- EMPTY STATE --- */
         .empty-state {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -186,7 +174,6 @@
         }
         .email-body img { max-width: 100% !important; height: auto !important; }
 
-        /* --- TOAST --- */
         #toast {
             visibility: hidden; min-width: 150px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 10px 20px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-weight: 600;
         }
@@ -198,7 +185,6 @@
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .hidden { display: none !important; }
-
     </style>
 </head>
 <body>
@@ -220,7 +206,6 @@
                         <span class="email-text" id="email-addr">Connecting...</span>
                     </div>
                     <button class="icon-btn" onclick="copyEmail()">
-                        <!-- Copy Icon -->
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     </button>
                 </div>
@@ -230,7 +215,7 @@
                     <button class="btn btn-danger" onclick="createNewId()">New ID</button>
                 </div>
 
-                <!-- EDIT MODE (CUSTOM UI) -->
+                <!-- EDIT MODE -->
                 <div id="edit-mode">
                     <span class="label-small" style="margin-bottom:8px">Username</span>
                     <div class="input-wrapper">
@@ -238,9 +223,7 @@
                     </div>
                     
                     <span class="label-small" style="margin-bottom:8px">Select Domain</span>
-                    <div class="domain-grid" id="domain-list">
-                        <!-- Populated via JS -->
-                    </div>
+                    <div class="domain-grid" id="domain-list"></div>
 
                     <button class="btn btn-primary" style="width:100%" onclick="setCustomEmail()">Set Address</button>
                 </div>
@@ -266,7 +249,7 @@
             </div>
         </div>
 
-        <!-- READ VIEW OVERLAY -->
+        <!-- READ VIEW -->
         <div id="view-read">
             <div class="app-wrapper" style="margin: 0 auto;">
                 <div class="read-nav">
@@ -282,9 +265,7 @@
                     <div class="meta-line">Date: <span class="meta-val" id="read-date">...</span></div>
                 </div>
 
-                <div class="email-body" id="read-body">
-                    <!-- HTML Content -->
-                </div>
+                <div class="email-body" id="read-body"></div>
             </div>
         </div>
 
@@ -296,14 +277,8 @@
     <script>
         // --- CONFIG ---
         const API_URL = "https://tempmail-services.by-oor.workers.dev/ajax.php";
-        
-        // Available Domains
-        const DOMAINS = [
-            "sharklasers.com", "guerrillamail.info", "grr.la", 
-            "guerrillamail.com", "guerrillamail.net", "pokemail.net"
-        ];
+        const DOMAINS = ["sharklasers.com", "guerrillamail.info", "grr.la", "guerrillamail.com", "guerrillamail.net", "pokemail.net"];
 
-        // State
         let session_id = localStorage.getItem("oor_mail_sid") || "";
         let current_email = "";
         let selectedDomain = DOMAINS[0];
@@ -312,15 +287,15 @@
 
         document.getElementById('copyright').innerText = `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
 
-        // --- STARTUP ---
+        // --- INIT ---
         async function init() {
             renderDomainGrid();
-            await getEmailAddress(); // Load Session
-            checkInbox(); // Initial Load (Full History)
+            await getEmailAddress(); 
+            checkInbox(); 
             startCountdown();
         }
 
-        // --- API FUNCTIONS ---
+        // --- API ---
 
         async function getEmailAddress() {
             let url = `${API_URL}?f=get_email_address`;
@@ -347,7 +322,7 @@
             const user = document.getElementById('custom-user').value.trim();
             if (!user) return showToast("Enter a username");
 
-            // Pass 'sid' to change email for CURRENT session
+            // FIX: Pass explicit parameters to new worker
             const url = `${API_URL}?f=set_email_user&email_user=${user}&lang=en&site=${selectedDomain}&sid=${session_id}`;
             
             try {
@@ -361,36 +336,34 @@
                     
                     document.getElementById('email-addr').innerText = current_email;
                     toggleEditMode(); 
-                    checkInbox(); // Clear old emails from view and check new
+                    checkInbox(); 
                     showToast("Address Updated!");
+                } else {
+                    showToast("Failed: Try different name");
                 }
             } catch(e) {
-                showToast("Failed to set address");
+                showToast("Server Error");
             }
         }
 
         async function checkInbox() {
             if (!session_id) return;
 
-            // seq=0 fetches ALL emails (history + new)
-            // This ensures inbox doesn't disappear
-            const url = `${API_URL}?f=check_email&sid=${session_id}&seq=0`;
+            // FIX: Use get_email_list with offset=0 to ALWAYS get full persistent inbox
+            const url = `${API_URL}?f=get_email_list&offset=0&sid=${session_id}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
                 const list = data.list || [];
                 renderList(list);
-            } catch (e) {
-                console.log("Inbox check failed");
-            }
+            } catch (e) { console.log("Inbox error"); }
             
-            refreshTimer = 10; // Reset countdown
+            refreshTimer = 10; 
         }
 
         async function openEmail(id) {
             showToast("Loading...");
-
             const url = `${API_URL}?f=fetch_email&sid=${session_id}&email_id=${id}`;
             
             try {
@@ -399,35 +372,26 @@
 
                 document.getElementById('read-subject').innerText = decodeHtml(data.mail_subject);
                 document.getElementById('read-sender').innerText = data.mail_from;
-                document.getElementById('read-date').innerText = formatTimeIST(data.mail_date); // Use Formatter
-                
+                document.getElementById('read-date').innerText = formatTimeIST(data.mail_date); 
                 document.getElementById('read-body').innerHTML = data.mail_body;
-
                 document.getElementById('view-read').classList.add('active');
                 
-                // Mark read locally
                 const row = document.getElementById(`mail-${id}`);
                 if(row) row.classList.remove('unread');
                 
-            } catch (e) {
-                showToast("Failed to load content");
-            }
+            } catch (e) { showToast("Failed to load content"); }
         }
 
-        // --- TIMERS ---
+        // --- UI HELPERS ---
+
         function startCountdown() {
             if(countdownId) clearInterval(countdownId);
             countdownId = setInterval(() => {
                 refreshTimer--;
                 document.getElementById('timer-text').innerText = `Update in ${refreshTimer}s`;
-                
-                if(refreshTimer <= 0) {
-                    checkInbox();
-                }
+                if(refreshTimer <= 0) checkInbox(); 
             }, 1000);
         }
-
-        // --- UI HELPERS ---
 
         function renderDomainGrid() {
             const grid = document.getElementById('domain-list');
@@ -438,16 +402,13 @@
                 chip.innerText = d;
                 chip.onclick = () => {
                     selectedDomain = d;
-                    renderDomainGrid(); // Re-render to show selection
+                    renderDomainGrid(); 
                 };
                 grid.appendChild(chip);
             });
         }
 
-        function toggleEditMode() {
-            const panel = document.getElementById('edit-mode');
-            panel.classList.toggle('show');
-        }
+        function toggleEditMode() { document.getElementById('edit-mode').classList.toggle('show'); }
 
         function createNewId() {
             if(confirm("Generate new ID? Old emails will be lost.")) {
@@ -461,7 +422,6 @@
             const ul = document.getElementById('email-list');
             const empty = document.getElementById('empty-state');
 
-            // If empty list
             if (emails.length === 0) {
                 ul.innerHTML = "";
                 ul.appendChild(empty); 
@@ -470,16 +430,14 @@
             }
 
             empty.classList.add('hidden');
-            ul.innerHTML = ""; // Clear current list
+            ul.innerHTML = ""; 
 
             emails.forEach(mail => {
                 const li = document.createElement('li');
                 const isUnread = mail.mail_read == 0;
-                
                 li.id = `mail-${mail.mail_id}`;
                 li.className = `email-item ${isUnread ? 'unread' : 'read'}`;
                 li.onclick = () => openEmail(mail.mail_id);
-
                 li.innerHTML = `
                     <div class="meta-row">
                         <span class="sender">${mail.mail_from}</span>
@@ -493,50 +451,24 @@
         }
 
         function formatTimeIST(dateStr, short = false) {
-            // Guerrilla returns server time string, not ISO.
-            // We assume dateStr is roughly "YYYY-MM-DD HH:MM:SS"
-            // Best effort to parse or just show as is if fails.
-            // Since Guerrilla doesn't give Timezone info, we try to just format the HH:MM
-            
             if(!dateStr) return "";
-            
-            // Simple Time Extraction "14:30" -> "2:30 PM"
-            // If dateStr is "2025-11-26 14:30:00"
             const parts = dateStr.split(" ");
             if(parts.length > 1) {
-                const timePart = parts[1]; // "14:30:00"
-                let [h, m] = timePart.split(":");
+                let [h, m] = parts[1].split(":");
                 const ampm = h >= 12 ? "PM" : "AM";
-                h = h % 12;
-                h = h ? h : 12; 
-                
-                if(short) return `${h}:${m} ${ampm}`; // For list view
-                return `${parts[0]} ${h}:${m} ${ampm} (Server Time)`; // For details
+                h = h % 12 || 12; 
+                if(short) return `${h}:${m} ${ampm}`; 
+                return `${parts[0]} ${h}:${m} ${ampm}`; 
             }
             return dateStr;
         }
 
-        function closeEmail() {
-            document.getElementById('view-read').classList.remove('active');
-        }
-
-        function copyEmail() {
-            navigator.clipboard.writeText(current_email);
-            showToast("Address Copied");
-        }
-
+        function closeEmail() { document.getElementById('view-read').classList.remove('active'); }
+        function copyEmail() { navigator.clipboard.writeText(current_email); showToast("Address Copied"); }
         function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.className = "show";
-            setTimeout(() => { t.className = ""; }, 3000);
+            const t = document.getElementById('toast'); t.innerText = msg; t.className = "show"; setTimeout(() => { t.className = ""; }, 3000);
         }
-
-        function decodeHtml(html) {
-            const txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            return txt.value;
-        }
+        function decodeHtml(html) { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; }
 
         init();
     </script>
