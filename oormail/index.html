@@ -85,7 +85,8 @@
         .refresh-pill { font-size: 11px; background: #222; padding: 4px 8px; border-radius: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
         .dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
         
-        .email-list { list-style: none; padding: 0; margin: 0; min-height: 200px; position: relative; }
+        /* SEPARATED EMPTY STATE FROM LIST */
+        .email-list { list-style: none; padding: 0; margin: 0; min-height: 50px; position: relative; }
         
         .email-item { padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.03); margin-bottom: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; position: relative; overflow: hidden; }
         .email-item:active { background: rgba(255,255,255,0.08); }
@@ -97,7 +98,7 @@
         .subject { font-size: 13px; color: #ccc; margin-bottom: 4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .snippet { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 
-        .empty-state { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; width: 100%; }
+        .empty-state { padding: 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; width: 100%; }
         .empty-state.hidden { display: none; }
 
         /* --- READ VIEW --- */
@@ -176,12 +177,13 @@
                     </div>
                 </div>
 
-                <ul id="email-list" class="email-list">
-                    <div id="empty-state" class="empty-state">
-                        <svg viewBox="0 0 24 24" width="40" height="40" stroke="#444" fill="none" stroke-width="1.5" style="margin-bottom:10px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        <div>No Mail Yet</div>
-                    </div>
-                </ul>
+                <ul id="email-list" class="email-list"></ul>
+
+                <!-- Empty State Separated -->
+                <div id="empty-state" class="empty-state">
+                    <svg viewBox="0 0 24 24" width="40" height="40" stroke="#444" fill="none" stroke-width="1.5" style="margin-bottom:10px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    <div>No Mail Yet</div>
+                </div>
             </div>
         </div>
 
@@ -209,7 +211,9 @@
 
     <script>
         const API_URL = "https://tempmail-services.by-oor.workers.dev/ajax.php";
-        const DOMAINS = ["sharklasers.com", "guerrillamail.info", "grr.la", "guerrillamail.com", "guerrillamail.net", "pokemail.net"];
+        
+        // 1. REFINED DOMAIN LIST (Only the stable ones)
+        const DOMAINS = ["sharklasers.com", "guerrillamail.com", "guerrillamail.info", "grr.la"];
 
         let session_id = localStorage.getItem("oor_mail_sid") || "";
         let current_email = "";
@@ -221,13 +225,13 @@
 
         async function init() {
             renderDomainGrid();
-            // If we have a session, try to recover it
+            
+            // If we have a session, do a quick inbox check to validate it
             if(session_id) {
-                await checkInbox(); // Check inbox first (this validates session)
-                // Get address for display
+                await checkInbox(); 
                 await getEmailAddress(); 
             } else {
-                await getEmailAddress(); // Create new
+                await getEmailAddress(); 
             }
             startCountdown();
         }
@@ -235,7 +239,6 @@
         // --- API ---
 
         async function getEmailAddress() {
-            // Always attach cache buster
             let url = `${API_URL}?f=get_email_address&_t=${Date.now()}`;
             if (session_id) url += `&sid=${session_id}`;
 
@@ -260,7 +263,7 @@
             const user = document.getElementById('custom-user').value.trim();
             if (!user) return showToast("Enter a username");
 
-            // API Request
+            // 2. FIXED API CALL - Pass all params including SITE
             const url = `${API_URL}?f=set_email_user&email_user=${user}&lang=en&site=${selectedDomain}&sid=${session_id}&_t=${Date.now()}`;
             
             try {
@@ -268,45 +271,36 @@
                 const data = await res.json();
                 
                 if(data.email_addr) {
-                    // FORCE DISPLAY UPDATE: Use the constructed email temporarily for better UX
-                    // The API returns 'email_addr' which is usually correct, but sometimes aliases
                     current_email = data.email_addr;
                     session_id = data.sid_token; 
                     localStorage.setItem("oor_mail_sid", session_id);
                     
-                    // UI Update
                     document.getElementById('email-addr').innerText = current_email;
                     toggleEditMode(); 
                     
-                    // Clear inbox locally before fetch
+                    // Force clear list logic
                     renderList([]);
+                    // Re-fetch
                     checkInbox(); 
                     showToast("Address Updated!");
                 } else {
-                    showToast("Update Failed");
+                    // Handle API errors gracefully
+                    showToast("Domain Unavailable. Try another.");
                 }
             } catch(e) {
-                showToast("Server Error");
+                showToast("Failed to set address");
             }
         }
 
         async function checkInbox() {
-            // Logic: Fetch ONLY if session exists
-            // Use get_email_list + offset=0 to force FULL list retrieval
             if (!session_id) return;
 
+            // 3. FIXED INBOX SYNC - get_email_list + offset=0
             const url = `${API_URL}?f=get_email_list&offset=0&sid=${session_id}&_t=${Date.now()}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
-                
-                // Update session if rotated
-                if(data.sid_token && data.sid_token !== session_id) {
-                    session_id = data.sid_token;
-                    localStorage.setItem("oor_mail_sid", session_id);
-                }
-
                 const list = data.list || [];
                 renderList(list);
             } catch (e) { console.log("Inbox sync error"); }
@@ -335,14 +329,13 @@
             } catch (e) { showToast("Failed to load content"); }
         }
 
-        // --- TIMER ---
+        // --- TIMERS ---
         function startCountdown() {
             if(countdownId) clearInterval(countdownId);
             countdownId = setInterval(() => {
                 refreshTimer--;
                 document.getElementById('timer-text').innerText = `Update in ${refreshTimer}s`;
                 if(refreshTimer <= 0) {
-                    document.getElementById('timer-text').innerText = `Refreshing...`;
                     checkInbox();
                 }
             }, 1000);
@@ -368,17 +361,15 @@
             const ul = document.getElementById('email-list');
             const empty = document.getElementById('empty-state');
 
+            // 4. FIXED RENDERING LOGIC - Explicit separation
+            ul.innerHTML = ""; 
+
             if (emails.length === 0) {
-                ul.innerHTML = "";
-                ul.appendChild(empty); 
                 empty.classList.remove('hidden');
                 return;
             }
 
             empty.classList.add('hidden');
-            // Compare current DOM with new data to avoid flickering (Simple Diff)
-            // Actually, simpler to just rebuild for this scale
-            ul.innerHTML = ""; 
 
             emails.forEach(mail => {
                 const li = document.createElement('li');
