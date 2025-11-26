@@ -85,8 +85,7 @@
         .refresh-pill { font-size: 11px; background: #222; padding: 4px 8px; border-radius: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
         .dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
         
-        /* SEPARATED EMPTY STATE FROM LIST */
-        .email-list { list-style: none; padding: 0; margin: 0; min-height: 50px; position: relative; }
+        .email-list { list-style: none; padding: 0; margin: 0; min-height: 200px; position: relative; }
         
         .email-item { padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.03); margin-bottom: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; position: relative; overflow: hidden; }
         .email-item:active { background: rgba(255,255,255,0.08); }
@@ -98,7 +97,7 @@
         .subject { font-size: 13px; color: #ccc; margin-bottom: 4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .snippet { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 
-        .empty-state { padding: 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; width: 100%; }
+        .empty-state { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; width: 100%; }
         .empty-state.hidden { display: none; }
 
         /* --- READ VIEW --- */
@@ -134,11 +133,9 @@
 
         <!-- HOME VIEW -->
         <div id="view-inbox">
-            
             <!-- ADDRESS CARD -->
             <div class="card" style="margin-bottom: 15px;">
                 <span class="label-small">Current Address</span>
-                
                 <div class="email-box">
                     <div class="email-text-container">
                         <span class="email-text" id="email-addr">Connecting...</span>
@@ -177,17 +174,16 @@
                     </div>
                 </div>
 
-                <ul id="email-list" class="email-list"></ul>
-
-                <!-- Empty State Separated -->
-                <div id="empty-state" class="empty-state">
-                    <svg viewBox="0 0 24 24" width="40" height="40" stroke="#444" fill="none" stroke-width="1.5" style="margin-bottom:10px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                    <div>No Mail Yet</div>
-                </div>
+                <ul id="email-list" class="email-list">
+                    <div id="empty-state" class="empty-state">
+                        <svg viewBox="0 0 24 24" width="40" height="40" stroke="#444" fill="none" stroke-width="1.5" style="margin-bottom:10px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <div>No Mail Yet</div>
+                    </div>
+                </ul>
             </div>
         </div>
 
-        <!-- READ VIEW OVERLAY -->
+        <!-- READ VIEW -->
         <div id="view-read">
             <div class="app-wrapper" style="margin: 0 auto;">
                 <div class="read-nav">
@@ -211,8 +207,7 @@
 
     <script>
         const API_URL = "https://tempmail-services.by-oor.workers.dev/ajax.php";
-        
-        // 1. REFINED DOMAIN LIST (Only the stable ones)
+        // Only stable domains
         const DOMAINS = ["sharklasers.com", "guerrillamail.com", "guerrillamail.info", "grr.la"];
 
         let session_id = localStorage.getItem("oor_mail_sid") || "";
@@ -226,10 +221,19 @@
         async function init() {
             renderDomainGrid();
             
-            // If we have a session, do a quick inbox check to validate it
+            // Check if we have a saved "Preferred Display Email"
+            const savedPref = localStorage.getItem("oor_mail_pref");
+            
             if(session_id) {
-                await checkInbox(); 
                 await getEmailAddress(); 
+                
+                // OVERRIDE: If session is valid, use the preferred display name if available
+                if(savedPref) {
+                    current_email = savedPref;
+                    document.getElementById('email-addr').innerText = current_email;
+                }
+                
+                checkInbox(); 
             } else {
                 await getEmailAddress(); 
             }
@@ -247,7 +251,9 @@
                 const data = await res.json();
 
                 if (data.email_addr) {
+                    // Default to API address
                     current_email = data.email_addr;
+                    
                     if (data.sid_token) {
                         session_id = data.sid_token;
                         localStorage.setItem("oor_mail_sid", session_id);
@@ -263,7 +269,6 @@
             const user = document.getElementById('custom-user').value.trim();
             if (!user) return showToast("Enter a username");
 
-            // 2. FIXED API CALL - Pass all params including SITE
             const url = `${API_URL}?f=set_email_user&email_user=${user}&lang=en&site=${selectedDomain}&sid=${session_id}&_t=${Date.now()}`;
             
             try {
@@ -271,21 +276,31 @@
                 const data = await res.json();
                 
                 if(data.email_addr) {
-                    current_email = data.email_addr;
+                    // LOGIC FIX: Manually Construct the displayed email
+                    // Guerrilla returns the block domain, but we want to show what we picked
+                    const apiUser = data.email_addr.split('@')[0];
+                    
+                    // If username matches (meaning API accepted it), force the domain display
+                    if(apiUser === user) {
+                        current_email = `${user}@${selectedDomain}`;
+                    } else {
+                        current_email = data.email_addr; // Fallback
+                    }
+
                     session_id = data.sid_token; 
                     localStorage.setItem("oor_mail_sid", session_id);
+                    
+                    // SAVE PREFERENCE
+                    localStorage.setItem("oor_mail_pref", current_email);
                     
                     document.getElementById('email-addr').innerText = current_email;
                     toggleEditMode(); 
                     
-                    // Force clear list logic
                     renderList([]);
-                    // Re-fetch
                     checkInbox(); 
                     showToast("Address Updated!");
                 } else {
-                    // Handle API errors gracefully
-                    showToast("Domain Unavailable. Try another.");
+                    showToast("Domain Unavailable");
                 }
             } catch(e) {
                 showToast("Failed to set address");
@@ -295,7 +310,6 @@
         async function checkInbox() {
             if (!session_id) return;
 
-            // 3. FIXED INBOX SYNC - get_email_list + offset=0
             const url = `${API_URL}?f=get_email_list&offset=0&sid=${session_id}&_t=${Date.now()}`;
 
             try {
@@ -329,7 +343,8 @@
             } catch (e) { showToast("Failed to load content"); }
         }
 
-        // --- TIMERS ---
+        // --- UI ---
+
         function startCountdown() {
             if(countdownId) clearInterval(countdownId);
             countdownId = setInterval(() => {
@@ -341,7 +356,6 @@
             }, 1000);
         }
 
-        // --- UI ---
         function renderDomainGrid() {
             const grid = document.getElementById('domain-list');
             grid.innerHTML = "";
@@ -361,7 +375,6 @@
             const ul = document.getElementById('email-list');
             const empty = document.getElementById('empty-state');
 
-            // 4. FIXED RENDERING LOGIC - Explicit separation
             ul.innerHTML = ""; 
 
             if (emails.length === 0) {
@@ -406,6 +419,7 @@
         function createNewId() {
             if(confirm("Generate new ID? Old emails will be lost.")) {
                 localStorage.removeItem("oor_mail_sid");
+                localStorage.removeItem("oor_mail_pref"); // Clear pref
                 session_id = "";
                 location.reload();
             }
