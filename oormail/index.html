@@ -133,9 +133,11 @@
 
         <!-- HOME VIEW -->
         <div id="view-inbox">
+            
             <!-- ADDRESS CARD -->
             <div class="card" style="margin-bottom: 15px;">
                 <span class="label-small">Current Address</span>
+                
                 <div class="email-box">
                     <div class="email-text-container">
                         <span class="email-text" id="email-addr">Connecting...</span>
@@ -183,7 +185,7 @@
             </div>
         </div>
 
-        <!-- READ VIEW -->
+        <!-- READ VIEW OVERLAY -->
         <div id="view-read">
             <div class="app-wrapper" style="margin: 0 auto;">
                 <div class="read-nav">
@@ -207,7 +209,8 @@
 
     <script>
         const API_URL = "https://tempmail-services.by-oor.workers.dev/ajax.php";
-        // Only stable domains
+        
+        // Stable Domains
         const DOMAINS = ["sharklasers.com", "guerrillamail.com", "guerrillamail.info", "grr.la"];
 
         let session_id = localStorage.getItem("oor_mail_sid") || "";
@@ -221,18 +224,18 @@
         async function init() {
             renderDomainGrid();
             
-            // Check if we have a saved "Preferred Display Email"
+            // 1. CHECK FOR SAVED PREFERENCE
             const savedPref = localStorage.getItem("oor_mail_pref");
             
             if(session_id) {
-                await getEmailAddress(); 
-                
-                // OVERRIDE: If session is valid, use the preferred display name if available
+                // If session exists, assume it is valid.
+                // If we have a preferred display name, use it immediately
                 if(savedPref) {
                     current_email = savedPref;
                     document.getElementById('email-addr').innerText = current_email;
+                } else {
+                    await getEmailAddress(); 
                 }
-                
                 checkInbox(); 
             } else {
                 await getEmailAddress(); 
@@ -251,14 +254,16 @@
                 const data = await res.json();
 
                 if (data.email_addr) {
-                    // Default to API address
-                    current_email = data.email_addr;
+                    // Only update UI if we DON'T have a forced preference set
+                    if (!localStorage.getItem("oor_mail_pref")) {
+                        current_email = data.email_addr;
+                        document.getElementById('email-addr').innerText = current_email;
+                    }
                     
                     if (data.sid_token) {
                         session_id = data.sid_token;
                         localStorage.setItem("oor_mail_sid", session_id);
                     }
-                    document.getElementById('email-addr').innerText = current_email;
                 }
             } catch (e) {
                 document.getElementById('email-addr').innerText = "Connection Error";
@@ -276,21 +281,15 @@
                 const data = await res.json();
                 
                 if(data.email_addr) {
-                    // LOGIC FIX: Manually Construct the displayed email
-                    // Guerrilla returns the block domain, but we want to show what we picked
-                    const apiUser = data.email_addr.split('@')[0];
+                    // FORCE DISPLAY LOGIC
+                    // Even if API returns @guerrillamailblock.com, we display what user picked
+                    const preferredEmail = `${user}@${selectedDomain}`;
                     
-                    // If username matches (meaning API accepted it), force the domain display
-                    if(apiUser === user) {
-                        current_email = `${user}@${selectedDomain}`;
-                    } else {
-                        current_email = data.email_addr; // Fallback
-                    }
-
+                    current_email = preferredEmail;
                     session_id = data.sid_token; 
-                    localStorage.setItem("oor_mail_sid", session_id);
                     
-                    // SAVE PREFERENCE
+                    // Save both session and display preference
+                    localStorage.setItem("oor_mail_sid", session_id);
                     localStorage.setItem("oor_mail_pref", current_email);
                     
                     document.getElementById('email-addr').innerText = current_email;
@@ -300,7 +299,7 @@
                     checkInbox(); 
                     showToast("Address Updated!");
                 } else {
-                    showToast("Domain Unavailable");
+                    showToast("Domain unavailable");
                 }
             } catch(e) {
                 showToast("Failed to set address");
@@ -310,6 +309,7 @@
         async function checkInbox() {
             if (!session_id) return;
 
+            // USE GET_EMAIL_LIST to ensure persistent inbox (shows all history)
             const url = `${API_URL}?f=get_email_list&offset=0&sid=${session_id}&_t=${Date.now()}`;
 
             try {
@@ -343,8 +343,7 @@
             } catch (e) { showToast("Failed to load content"); }
         }
 
-        // --- UI ---
-
+        // --- TIMER ---
         function startCountdown() {
             if(countdownId) clearInterval(countdownId);
             countdownId = setInterval(() => {
@@ -356,6 +355,7 @@
             }, 1000);
         }
 
+        // --- UI ---
         function renderDomainGrid() {
             const grid = document.getElementById('domain-list');
             grid.innerHTML = "";
@@ -416,14 +416,16 @@
         }
 
         function toggleEditMode() { document.getElementById('edit-mode').classList.toggle('show'); }
+        
         function createNewId() {
             if(confirm("Generate new ID? Old emails will be lost.")) {
                 localStorage.removeItem("oor_mail_sid");
-                localStorage.removeItem("oor_mail_pref"); // Clear pref
+                localStorage.removeItem("oor_mail_pref"); // Clear Preference
                 session_id = "";
                 location.reload();
             }
         }
+        
         function closeEmail() { document.getElementById('view-read').classList.remove('active'); }
         function copyEmail() { navigator.clipboard.writeText(current_email); showToast("Address Copied"); }
         function showToast(msg) {
