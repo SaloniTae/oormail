@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OOR | MAIL</title>
+    <link rel="icon" href="https://res.cloudinary.com/djzfoukhz/image/upload/Support_20250428_001646_0000_hkeixk.jpg">
+    <style>
+        :root {
+            --bg: #000000;
+            --card-bg: #111111;
+            --nav-bg: #1c1c1e;
+            --text: #ffffff;
+            --text-dim: #8e8e93;
+            --border: #2c2c2e;
+            --accent: #0A84FF;
+            --danger: #ff453a;
+            --success: #30d158;
+            --btn-white: #ffffff;
+            --btn-secondary: #2c2c2e;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .app-wrapper { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* --- LOGO --- */
+        .logo-container { display: flex; justify-content: center; margin-bottom: 5px; }
+        .logo-img { height: 45px; width: auto; display: block; }
+
+        /* --- CARD --- */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .label-small {
+            font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 8px; display: block;
+        }
+
+        /* --- EMAIL ADDRESS BOX --- */
+        .email-box {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .email-text {
+            font-family: monospace;
+            font-size: 16px;
+            color: white;
+            word-break: break-all;
+        }
+        .email-actions { display: flex; gap: 10px; }
+
+        /* --- BUTTONS --- */
+        .btn {
+            border: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: var(--btn-white); color: black; }
+        .btn-secondary { background: var(--btn-secondary); color: white; }
+        .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--danger); }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
+
+        .icon-btn {
+            background: transparent; border: none; color: var(--text-dim); cursor: pointer; padding: 5px;
+        }
+        .icon-btn:active { color: white; }
+        .icon-btn svg { width: 20px; height: 20px; }
+
+        /* --- CONTROL BAR --- */
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        .controls .btn { flex: 1; justify-content: center; }
+
+        /* --- INBOX --- */
+        .inbox-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border);
+        }
+        .refresh-timer { font-size: 12px; color: var(--text-dim); }
+        
+        .email-list { list-style: none; padding: 0; margin: 0; min-height: 200px; }
+        
+        .email-item {
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .email-item:active { background: rgba(255,255,255,0.08); transform: scale(0.99); }
+        .email-item.unread { border-left: 3px solid var(--accent); background: rgba(10, 132, 255, 0.05); }
+
+        .meta-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .sender { font-weight: 700; font-size: 14px; color: white; }
+        .time { font-size: 12px; color: var(--text-dim); }
+        .subject { font-size: 13px; color: #ddd; margin-bottom: 4px; display: block; }
+        .snippet { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text-dim); text-align: center;
+        }
+        .empty-icon { margin-bottom: 10px; opacity: 0.3; }
+
+        /* --- READ VIEW (Overlay) --- */
+        #view-read {
+            display: none;
+        }
+        #view-read.active { display: block; animation: fadeIn 0.3s ease; }
+
+        .read-header { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .read-subject { font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+        .read-meta { font-size: 13px; color: var(--text-dim); }
+
+        .email-body {
+            background: white; /* Emails must be white usually */
+            color: black;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 300px;
+            overflow-x: auto;
+        }
+
+        /* --- TOAST --- */
+        #toast {
+            visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 12px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-weight: 600;
+        }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+
+        footer { margin-top: 40px; text-align: center; font-size: 14px; color: #888; font-weight: 500; }
+        
+        .spinner { width: 16px; height: 16px; border: 2px solid #888; border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
+        .btn .spinner { margin-right: 0; } 
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <div class="logo-container">
+            <img src="https://res.cloudinary.com/djzfoukhz/image/upload/oskspw1vm2hyk8qn0yjo.png" alt="Logo" class="logo-img">
+        </div>
+
+        <!-- INBOX VIEW -->
+        <div id="view-inbox">
+            <!-- ADDRESS CARD -->
+            <div class="card" style="margin-bottom: 20px;">
+                <span class="label-small">Temporary Address</span>
+                <div class="email-box">
+                    <span class="email-text" id="email-addr">Loading...</span>
+                    <div class="email-actions">
+                        <button class="icon-btn" onclick="copyEmail()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-secondary" onclick="manualRefresh()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        Refresh
+                    </button>
+                    <button class="btn btn-danger" onclick="createNewId()">
+                        New ID
+                    </button>
+                </div>
+            </div>
+
+            <!-- INBOX LIST -->
+            <div class="card">
+                <div class="inbox-header">
+                    <span class="label-small">Inbox</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="spinner" id="refresh-spinner"></div>
+                        <span class="refresh-timer" id="timer-text">Auto-update on</span>
+                    </div>
+                </div>
+
+                <ul id="email-list" class="email-list"></ul>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" width="40" height="40" stroke="white" fill="none" stroke-width="1"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </div>
+                    <div>Inbox Empty</div>
+                    <div style="font-size:12px; margin-top:5px;">Waiting for incoming mail...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- READ VIEW -->
+        <div id="view-read">
+            <div class="card">
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-secondary" onclick="closeEmail()" style="width: auto; padding: 8px 14px;">
+                        ← Back to Inbox
+                    </button>
+                </div>
+                
+                <div class="read-header">
+                    <div class="read-subject" id="read-subject">...</div>
+                    <div class="read-meta">
+                        From: <span id="read-sender" style="color:white; font-weight:600;">...</span>
+                    </div>
+                    <div class="read-meta" style="margin-top:4px;">
+                        Date: <span id="read-date">...</span>
+                    </div>
+                </div>
+
+                <div class="email-body">
+                    <div id="read-body"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer><div id="copyright"></div></footer>
+    </div>
+
+    <div id="toast">Copied</div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // This is the URL you provided
+        const API_URL = "https://tempmail-services.by-oor.workers.dev/ajax.php";
+
+        let session_id = localStorage.getItem("oor_mail_sid") || "";
+        let current_email = "";
+        let refreshInterval;
+
+        document.getElementById('copyright').innerText = `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
+
+        // --- APP START ---
+        async function init() {
+            // 1. Load or Create Email
+            await getEmailAddress();
+            
+            // 2. Start Polling (every 10s)
+            refreshInterval = setInterval(checkInbox, 10000);
+            checkInbox();
+        }
+
+        // --- API CALLS ---
+
+        async function getEmailAddress(forceNew = false) {
+            // If we have a session, pass it to resume. If forceNew, pass nothing.
+            let url = `${API_URL}?f=get_email_address`;
+            if (session_id && !forceNew) {
+                url += `&sid=${session_id}`;
+            }
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.email_addr) {
+                    current_email = data.email_addr;
+                    // The API likely returns the cookie/sid in the response body or we assume 
+                    // the worker handles cookie persistence.
+                    // However, standard Guerrilla flow returns sid_token if using the proxy wrapper.
+                    // If your worker returns `sid_token`, use it. If not, we rely on the API session logic.
+                    
+                    if (data.sid_token) {
+                        session_id = data.sid_token;
+                        localStorage.setItem("oor_mail_sid", session_id);
+                    }
+
+                    document.getElementById('email-addr').innerText = current_email;
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('email-addr').innerText = "Error connecting";
+            }
+        }
+
+        async function checkInbox() {
+            if (!session_id) return;
+
+            const spinner = document.getElementById('refresh-spinner');
+            const timerText = document.getElementById('timer-text');
+            
+            spinner.style.display = 'block';
+            timerText.innerText = "Checking...";
+
+            try {
+                // seq=0 means get all recent emails
+                const url = `${API_URL}?f=check_email&sid=${session_id}&seq=0`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                const list = data.list || [];
+                renderList(list);
+            } catch (e) {
+                console.error(e);
+            }
+            
+            spinner.style.display = 'none';
+            timerText.innerText = "Auto-update on";
+        }
+
+        async function openEmail(id) {
+            // Show loading state if needed
+            const url = `${API_URL}?f=fetch_email&sid=${session_id}&email_id=${id}`;
+            
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+
+                document.getElementById('read-subject').innerText = data.mail_subject;
+                document.getElementById('read-sender').innerText = data.mail_from;
+                document.getElementById('read-date').innerText = data.mail_date;
+                
+                // Render HTML safely (Guerrilla sanitizes JS, but we put it in a div)
+                document.getElementById('read-body').innerHTML = data.mail_body;
+
+                // Switch Views
+                document.getElementById('view-inbox').classList.add('hidden');
+                document.getElementById('view-read').classList.add('active');
+            } catch (e) {
+                showToast("Failed to load email");
+            }
+        }
+
+        // --- UI ACTIONS ---
+
+        function manualRefresh() {
+            checkInbox();
+            showToast("Refreshing Inbox...");
+        }
+
+        function createNewId() {
+            if(confirm("Generate a new email address? Old emails will be lost.")) {
+                // Reset Local State
+                localStorage.removeItem("oor_mail_sid");
+                session_id = "";
+                document.getElementById('email-list').innerHTML = "";
+                document.getElementById('empty-state').classList.remove('hidden');
+                
+                // Call API
+                getEmailAddress(true); // forceNew = true
+                
+                // Clear Read View if open
+                closeEmail();
+            }
+        }
+
+        function copyEmail() {
+            navigator.clipboard.writeText(current_email);
+            showToast("Email Copied");
+        }
+
+        function closeEmail() {
+            document.getElementById('view-read').classList.remove('active');
+            document.getElementById('view-inbox').classList.remove('hidden');
+        }
+
+        function renderList(emails) {
+            const ul = document.getElementById('email-list');
+            const empty = document.getElementById('empty-state');
+
+            if (emails.length === 0) {
+                ul.innerHTML = "";
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            ul.innerHTML = "";
+
+            emails.forEach(mail => {
+                const li = document.createElement('li');
+                // Check if read (1) or unread (0)
+                li.className = `email-item ${mail.mail_read == 0 ? 'unread' : ''}`;
+                li.onclick = () => openEmail(mail.mail_id);
+
+                li.innerHTML = `
+                    <div class="meta-row">
+                        <span class="sender">${mail.mail_from}</span>
+                        <span class="time">${mail.mail_date.split(" ")[1]}</span> 
+                    </div>
+                    <span class="subject">${mail.mail_subject}</span>
+                    <span class="snippet">${mail.mail_excerpt}</span>
+                `;
+                ul.appendChild(li);
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.innerText = msg;
+            toast.className = "show";
+            setTimeout(() => { toast.className = ""; }, 3000);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
