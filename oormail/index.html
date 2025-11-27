@@ -2,25 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OOR | MAIL</title>
-    <link rel="icon" href="https://res.cloudinary.com/djzfoukhz/image/upload/Support_20250428_001646_0000_hkeixk.jpg">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum=1.0, user-scalable=no"
+    >
+    <title>OOR Mail</title>
+    <link
+        rel="icon"
+        href="https://res.cloudinary.com/djzfoukhz/image/upload/v1764230192/OORMAIL-Favicon_isxdaa.jpg"
+    >
     <style>
         :root {
-            --bg: #050505;
-            --card-bg: #121212;
+            --bg: #000000;
+            --card-bg: #111111;
+            --nav-bg: #1c1c1e;
             --text: #ffffff;
-            --text-dim: #888888;
-            --border: #262626;
+            --text-dim: #8e8e93;
+            --border: #2c2c2e;
             --accent: #0A84FF;
-            --danger: #FF453A;
+            --danger: #ff453a;
             --success: #30d158;
             --btn-white: #ffffff;
-            --btn-sec: #1F1F1F;
-            --overlay: rgba(0,0,0,0.7);
+            --btn-sec: #2c2c2e;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+        }
 
         body {
             background-color: var(--bg);
@@ -30,290 +40,662 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px 15px;
+            padding: 22px 18px 28px;
             overflow-x: hidden;
         }
 
-        /* --- LAYOUT --- */
-        .app-wrapper { 
-            width: 100%; 
-            max-width: 550px; /* Optimal reading width */
-            display: flex; 
-            flex-direction: column; 
-            gap: 18px; 
-            position: relative;
-            margin: 0 auto; /* Centers the cards */
-        }
-
-        /* --- HEADER (Logo Left) --- */
-        .app-header {
+        .app-wrapper {
+            width: 100%;
+            max-width: 680px;
             display: flex;
-            justify-content: flex-start; /* Logo Left */
-            align-items: center;
-            padding: 0 5px;
-            margin-bottom: 5px;
+            flex-direction: column;
+            gap: 22px;
+            position: relative;
         }
-        .logo-img { height: 38px; width: auto; display: block; }
 
-        /* --- CARD BASE --- */
+        .logo-container {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 4px;
+            padding: 4px 2px 0;
+        }
+
+        .logo-img {
+            height: 32px;
+            width: auto;
+            display: block;
+            opacity: 0.95;
+        }
+
+        /* --- CARD --- */
         .card {
-            background: var(--card-bg);
+            background: rgba(17, 17, 17, 0.9);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 20px;
+            padding: 20px 18px 18px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        /* inbox card taller & flex so empty state can center */
+        .inbox-card {
+            min-height: 360px; /* increased height from below */
+            display: flex;
+            flex-direction: column;
         }
 
         .label-small {
-            font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; margin-bottom: 10px; display: block; opacity: 0.8;
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: block;
         }
 
-        /* --- ADDRESS BOX (Improved UI) --- */
+        /* titles for "Current Address" & "Inbox" – no hyphen line now */
+        .section-title {
+            font-size: 12px;
+            letter-spacing: 0.16em;
+            color: #c0c0c0;
+            font-weight: 600;
+        }
+
+        /* fix alignment of Inbox text inside header */
+        .inbox-header .section-title {
+            margin-bottom: 0;
+        }
+
+        /* --- ADDRESS BOX --- */
         .email-box {
-            background: #0a0a0a;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 0 6px 0 16px; /* Left padding for text, Right for button */
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 0 14px;
             height: 56px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
-            transition: border-color 0.2s;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
-        
+
         .email-text-container {
             flex: 1;
             overflow-x: auto;
             white-space: nowrap;
             margin-right: 10px;
-            -ms-overflow-style: none; scrollbar-width: none; 
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-        .email-text-container::-webkit-scrollbar { display: none; }
+
+        .email-text-container::-webkit-scrollbar {
+            display: none;
+        }
 
         .email-text {
-            font-family: 'SF Mono', 'Consolas', monospace;
+            font-family: monospace;
             font-size: 15px;
             color: white;
             line-height: 56px;
-            letter-spacing: -0.3px;
         }
 
         .icon-btn {
-            background: transparent; border: none; border-radius: 10px; color: var(--text-dim); cursor: pointer; padding: 8px; display: flex; align-items: center; transition: 0.2s; flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            transition: 0.18s ease;
+            flex-shrink: 0;
+            height: 32px;
+            width: 32px;
+            justify-content: center;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
-        .icon-btn:active { background: rgba(255,255,255,0.1); color: white; }
-        .icon-btn svg { width: 20px; height: 20px; }
+
+        .icon-btn:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .icon-btn svg {
+            width: 16px;
+            height: 16px;
+        }
 
         /* --- CONTROLS --- */
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        
-        .btn {
-            border: none; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* equal buttons */
+            gap: 12px;
+            margin-top: 14px;
         }
-        .btn-primary { background: var(--btn-white); color: black; }
-        .btn-secondary { background: var(--btn-sec); color: white; border: 1px solid var(--border); }
-        .btn-danger { background: rgba(255, 69, 58, 0.1); color: var(--danger); border: 1px solid rgba(255, 69, 58, 0.2); }
-        .btn:active { transform: scale(0.97); opacity: 0.8; }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--btn-white);
+            color: #000;
+            box-shadow: 0 6px 18px rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-secondary {
+            background: var(--btn-sec);
+            color: white;
+        }
+
+        .btn-danger {
+            background: rgba(255, 69, 58, 0.16);
+            color: var(--danger);
+            border: 1px solid rgba(255, 69, 58, 0.4);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            opacity: 0.86;
+        }
 
         /* --- EDIT MODE --- */
-        #edit-mode { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); animation: fadeIn 0.3s ease; }
-        #edit-mode.show { display: block; }
-        
-        .input-wrapper { margin-bottom: 12px; }
+        #edit-mode {
+            display: none;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            animation: fadeIn 0.25s ease;
+        }
+
+        #edit-mode.show {
+            display: block;
+        }
+
+        .input-wrapper {
+            margin-bottom: 12px;
+        }
+
         input.custom-input {
-            background: #000; color: white; border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-size: 15px; width: 100%; outline: none; transition: 0.2s;
+            background: #000;
+            color: white;
+            border: 1px solid #333;
+            padding: 11px 12px;
+            border-radius: 11px;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
         }
-        input.custom-input:focus { border-color: var(--text-dim); }
-        
-        .domain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+        input.custom-input::placeholder {
+            color: #666;
+        }
+
+        input.custom-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.4);
+            background: #050506;
+        }
+
+        .domain-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* bigger, nicer domain buttons */
         .domain-chip {
-            background: var(--btn-sec); color: var(--text-dim); padding: 10px; border-radius: 10px; font-size: 12px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; font-weight: 500;
-        }
-        .domain-chip.selected {
-            background: var(--btn-white); color: black; border-color: white; font-weight: 700;
-        }
-
-        /* --- INBOX HEADER --- */
-        .inbox-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border);
-        }
-        .label-lg { font-size: 18px; font-weight: 700; color: white; margin: 0; }
-        
-        .refresh-pill {
-            font-size: 12px; font-family: 'SF Mono', monospace; background: #1A1A1A; padding: 6px 12px; border-radius: 20px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; border: 1px solid var(--border);
-        }
-        .dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px rgba(48, 209, 88, 0.4); }
-        
-        /* --- EMAIL LIST --- */
-        .email-list { list-style: none; padding: 0; margin: 0; min-height: 200px; position: relative; }
-        
-        .email-item {
-            padding: 16px;
-            border-radius: 16px;
-            background: transparent;
-            margin-bottom: 4px;
+            background: #181818;
+            color: #aaa;
+            padding: 10px 8px;
+            border-radius: 11px;
+            font-size: 12px;
+            text-align: center;
             cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-        }
-        .email-item:last-child { border-bottom: none; }
-        .email-item:active { background: rgba(255,255,255,0.05); }
-        
-        /* Unread: Blue dot indicator instead of border */
-        .email-item.unread .subject { color: white; font-weight: 700; }
-        .email-item.unread .sender { color: white; font-weight: 600; }
-        .email-item.unread::before {
-            content: ''; position: absolute; left: 4px; top: 22px; width: 4px; height: 4px; background: var(--accent); border-radius: 50%;
+            border: 1px solid #2a2a2a;
+            transition: 0.18s ease;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .meta-row { display: flex; justify-content: space-between; margin-bottom: 6px; align-items: baseline; }
-        .sender { font-size: 14px; color: #ccc; max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .time { font-size: 12px; color: #666; font-variant-numeric: tabular-nums; }
-        .subject { font-size: 14px; color: #999; margin-bottom: 4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .snippet { font-size: 13px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .domain-chip.selected {
+            background: var(--btn-white);
+            color: black;
+            border-color: white;
+            font-weight: 700;
+        }
 
-        /* --- EMPTY STATE --- */
+        .domain-chip:not(.selected):active {
+            background: #222;
+            border-color: #444;
+        }
+
+        /* --- INBOX --- */
+        .inbox-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* align text & timer properly */
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .refresh-pill {
+            font-size: 11px;
+            background: rgba(24, 24, 24, 0.9);
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: var(--text-dim);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        /* SEPARATED EMPTY STATE FROM LIST */
+        .email-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* read/unread styles unchanged */
+        .email-item {
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .email-item:active {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .email-item.unread {
+            background: rgba(10, 132, 255, 0.08);
+            border-left: 3px solid var(--accent);
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            align-items: baseline;
+        }
+
+        .sender {
+            font-weight: 600;
+            font-size: 14px;
+            color: #ddd;
+            max-width: 65%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .time {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .subject {
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 4px;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .snippet {
+            font-size: 12px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        /* empty state fills remaining height & centers inside inbox card */
         .empty-state {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            color: var(--text-dim); text-align: center; width: 100%;
+            flex: 1;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;   /* horizontally */
+            justify-content: center; /* vertically within remaining space */
+            gap: 8px;
+            color: var(--text-dim);
+            text-align: center;
+            width: 100%;
         }
-        .empty-state.hidden { display: none; }
+
+        .empty-state.hidden {
+            display: none;
+        }
+
+        .empty-state svg {
+            opacity: 0.7;
+        }
+
+        .empty-state div {
+            font-size: 13px;
+            letter-spacing: 0.02em;
+            text-align: center;
+        }
 
         /* --- READ VIEW --- */
         #view-read {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg); z-index: 50; overflow-y: auto;
-            display: none; padding: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 50;
+            overflow-y: auto;
+            display: none;
+            padding: 20px;
         }
-        #view-read.active { display: block; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        .read-nav { display: flex; align-items: center; margin-bottom: 25px; }
-        .read-subject-lg { font-size: 22px; font-weight: 700; line-height: 1.3; margin-bottom: 15px; letter-spacing: -0.5px; }
-        
-        .read-meta-box {
-            background: var(--card-bg); border: 1px solid var(--border); padding: 16px; border-radius: 16px; margin-bottom: 25px;
+        #view-read.active {
+            display: block;
+            animation: slideUp 0.3s ease;
         }
-        .meta-line { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: var(--text-dim); }
-        .meta-line:last-child { margin-bottom: 0; }
-        .meta-val { color: white; font-weight: 500; }
+
+        .read-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* new UI with icon for back to inbox */
+        .read-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding-inline: 14px !important;
+        }
+
+        .read-back-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .read-subject-lg {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .read-meta-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .meta-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: var(--text-dim);
+        }
+
+        .meta-val {
+            color: white;
+            font-weight: 500;
+        }
 
         .email-body {
-            background: white; color: black; border-radius: 12px; padding: 20px; min-height: 400px; overflow-x: auto; font-size: 15px; line-height: 1.6;
+            background: white;
+            color: black;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 400px;
+            overflow-x: auto;
+            word-wrap: break-word;
         }
-        .email-body img { max-width: 100% !important; height: auto !important; }
 
-        /* --- CUSTOM MODAL --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            z-index: 100; display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.2s;
+        .email-body img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
         }
-        .modal-overlay.active { display: flex; opacity: 1; }
 
-        .modal-box {
-            background: #1a1a1a; width: 85%; max-width: 320px; border-radius: 20px; padding: 25px;
-            text-align: center; border: 1px solid var(--border); transform: scale(0.95); transition: transform 0.2s;
-        }
-        .modal-overlay.active .modal-box { transform: scale(1); }
-
-        .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: white; }
-        .modal-desc { font-size: 14px; color: #aaa; margin-bottom: 25px; line-height: 1.4; }
-        
-        .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-modal-cancel { background: transparent; color: #aaa; border: 1px solid var(--border); }
-        .btn-modal-confirm { background: var(--danger); color: white; }
-
-        /* --- TOAST --- */
         #toast {
-            visibility: hidden; min-width: 120px; background-color: #222; color: #fff; 
-            text-align: center; border-radius: 50px; padding: 12px 24px; 
-            position: fixed; z-index: 200; left: 50%; bottom: 40px; transform: translateX(-50%);
-            font-size: 14px; font-weight: 600; border: 1px solid var(--border);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s, bottom 0.3s; 
+            visibility: hidden;
+            min-width: 150px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 10px 20px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+            font-weight: 600;
         }
-        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
-        /* --- FOOTER --- */
-        footer { margin-top: 50px; text-align: center; font-size: 12px; color: #444; font-weight: 500; letter-spacing: 0.5px; }
-        
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .hidden { display: none !important; }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
 
+        footer {
+            margin-top: 42px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* NEW ID CONFIRM MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 80;
+        }
+
+        .modal-card {
+            background: rgba(21, 21, 21, 0.96);
+            border-radius: 18px;
+            border: 1px solid #2b2b2b;
+            padding: 18px 16px 14px;
+            width: min(340px, 90%);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .modal-text {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions .btn {
+            flex: 0 0 auto;
+            padding-inline: 14px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
-
     <div class="app-wrapper">
-        <!-- HEADER -->
-        <div class="app-header">
-            <img src="https://res.cloudinary.com/djzfoukhz/image/upload/oskspw1vm2hyk8qn0yjo.png" alt="Logo" class="logo-img">
+        <div class="logo-container">
+            <img
+                src="https://res.cloudinary.com/djzfoukhz/image/upload/OORMail-Logo_cnrovy.png"
+                alt="Logo"
+                class="logo-img"
+            >
         </div>
 
         <!-- HOME VIEW -->
         <div id="view-inbox">
-            
             <!-- ADDRESS CARD -->
-            <div class="card" style="margin-bottom: 20px;">
-                <span class="label-small">Current Address</span>
-                
+            <div class="card" style="margin-bottom: 10px;">
+                <span class="label-small section-title">CURRENT ADDRESS</span>
+
                 <div class="email-box">
                     <div class="email-text-container">
                         <span class="email-text" id="email-addr">Connecting...</span>
                     </div>
                     <button class="icon-btn" onclick="copyEmail()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
                     </button>
                 </div>
 
                 <div class="controls">
-                    <button class="btn btn-secondary" onclick="toggleEditMode()">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        Customize
-                    </button>
-                    <button class="btn btn-danger" onclick="openModal()">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                        New ID
-                    </button>
+                    <button class="btn btn-secondary" onclick="toggleEditMode()">Customize</button>
+                    <button class="btn btn-danger" onclick="createNewId()">New ID</button>
                 </div>
 
                 <!-- EDIT MODE -->
                 <div id="edit-mode">
-                    <span class="label-small" style="margin-bottom:8px">Username</span>
+                    <span class="label-small" style="margin-bottom: 8px;">Username</span>
                     <div class="input-wrapper">
-                        <input type="text" id="custom-user" placeholder="Enter name" class="custom-input">
+                        <input
+                            type="text"
+                            id="custom-user"
+                            placeholder="Enter name"
+                            class="custom-input"
+                        >
                     </div>
-                    
-                    <span class="label-small" style="margin-bottom:8px">Select Domain</span>
+
+                    <span class="label-small" style="margin-bottom: 8px;">Select Domain</span>
                     <div class="domain-grid" id="domain-list"></div>
 
-                    <button class="btn btn-primary" style="width:100%" onclick="setCustomEmail()">Set Address</button>
+                    <button
+                        class="btn btn-primary"
+                        style="width: 100%; margin-top: 2px;"
+                        onclick="setCustomEmail()"
+                    >
+                        Set Address
+                    </button>
                 </div>
             </div>
 
             <!-- INBOX LIST -->
-            <div class="card">
+            <div class="card inbox-card">
                 <div class="inbox-header">
-                    <h2 class="label-lg">Inbox</h2>
+                    <span class="label-small section-title">INBOX</span>
                     <div class="refresh-pill">
                         <span class="dot"></span>
-                        <span id="timer-text">00:10</span>
+                        <span id="timer-text">Update in 10s</span>
                     </div>
                 </div>
 
-                <ul id="email-list" class="email-list">
-                    <div id="empty-state" class="empty-state">
-                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="#333" fill="none" stroke-width="1" style="margin-bottom:15px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        <div>Inbox Empty</div>
-                        <div style="font-size:12px; margin-top:5px; color:#555;">Waiting for mail...</div>
-                    </div>
-                </ul>
+                <ul id="email-list" class="email-list"></ul>
+
+                <!-- Empty State Separated -->
+                <div id="empty-state" class="empty-state">
+                    <svg
+                        viewBox="0 0 24 24"
+                        width="40"
+                        height="40"
+                        stroke="#444"
+                        fill="none"
+                        stroke-width="1.5"
+                    >
+                        <path
+                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                        ></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <div>No Mail Yet</div>
+                </div>
             </div>
         </div>
 
@@ -321,42 +703,56 @@
         <div id="view-read">
             <div class="app-wrapper" style="margin: 0 auto;">
                 <div class="read-nav">
-                    <button class="btn btn-secondary" onclick="closeEmail()" style="width: auto; padding: 10px 18px;">
-                        ← Inbox
+                    <button
+                        class="btn btn-secondary read-back-btn"
+                        onclick="closeEmail()"
+                        style="width: auto; padding: 8px 16px;"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                            <path d="M9 12h12"></path>
+                        </svg>
+                        <span>Inbox</span>
                     </button>
                 </div>
-                
                 <div class="read-subject-lg" id="read-subject">...</div>
-
                 <div class="read-meta-box">
-                    <div class="meta-line">From: <span class="meta-val" id="read-sender">...</span></div>
-                    <div class="meta-line">Date: <span class="meta-val" id="read-date">...</span></div>
+                    <div class="meta-line">
+                        From: <span class="meta-val" id="read-sender">...</span>
+                    </div>
+                    <div class="meta-line">
+                        Date: <span class="meta-val" id="read-date">...</span>
+                    </div>
                 </div>
-
                 <div class="email-body" id="read-body"></div>
             </div>
         </div>
 
-        <footer><div id="copyright"></div></footer>
-    </div>
-
-    <!-- CUSTOM MODAL -->
-    <div id="modal-confirm" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-title">Generate New ID?</div>
-            <div class="modal-desc">This will discard your current email address and clear the inbox.</div>
-            <div class="modal-actions">
-                <button class="btn btn-modal-cancel" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-modal-confirm" onclick="confirmNewId()">Generate</button>
-            </div>
-        </div>
+        <footer>
+            <div id="copyright"></div>
+        </footer>
     </div>
 
     <div id="toast">Copied</div>
 
+    <!-- New ID Confirm Modal -->
+    <div id="confirm-overlay" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-title">Generate new address?</div>
+            <div class="modal-text">
+                Creating a new ID will clear this inbox for the current session.
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmNewId()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmNewId()">Yes, continue</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- CONFIG ---
         const API_URL = "https://tempmail-services.by-oor.workers.dev/ajax.php";
+
+        // Stable domains
         const DOMAINS = ["sharklasers.com", "guerrillamail.com", "guerrillamail.info", "grr.la"];
 
         let session_id = localStorage.getItem("oor_mail_sid") || "";
@@ -365,25 +761,28 @@
         let refreshTimer = 10;
         let countdownId;
 
-        document.getElementById('copyright').innerText = `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
+        document.getElementById("copyright").innerText =
+            `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
 
         async function init() {
             renderDomainGrid();
-            
-            // Force Display Preference Load
-            const savedPref = localStorage.getItem("oor_mail_pref");
-            
-            if(session_id) {
-                if(savedPref) {
-                    current_email = savedPref;
-                    document.getElementById('email-addr').innerText = current_email;
-                } else {
-                    await getEmailAddress(); 
-                }
-                checkInbox(); 
+
+            const params = new URLSearchParams(window.location.search);
+            const urlMail = params.get("mail");
+
+            if (urlMail) {
+                // Deep link via ?mail=username@domain.com
+                await initFromUrlMail(urlMail);
             } else {
-                await getEmailAddress(); 
+                // Normal flow (existing session or new)
+                if (session_id) {
+                    await checkInbox();
+                    await getEmailAddress();
+                } else {
+                    await getEmailAddress();
+                }
             }
+
             startCountdown();
         }
 
@@ -398,137 +797,211 @@
                 const data = await res.json();
 
                 if (data.email_addr) {
-                    if (!localStorage.getItem("oor_mail_pref")) {
-                        current_email = data.email_addr;
-                        document.getElementById('email-addr').innerText = current_email;
-                    }
+                    current_email = data.email_addr;
                     if (data.sid_token) {
                         session_id = data.sid_token;
                         localStorage.setItem("oor_mail_sid", session_id);
                     }
+                    document.getElementById("email-addr").innerText = current_email;
                 }
             } catch (e) {
-                document.getElementById('email-addr').innerText = "Connection Error";
+                document.getElementById("email-addr").innerText = "Connection Error";
             }
         }
 
         async function setCustomEmail() {
-            const user = document.getElementById('custom-user').value.trim();
+            const user = document.getElementById("custom-user").value.trim();
             if (!user) return showToast("Enter a username");
 
-            const url = `${API_URL}?f=set_email_user&email_user=${user}&lang=en&site=${selectedDomain}&sid=${session_id}&_t=${Date.now()}`;
-            
+            // Immediately reflect chosen address
+            const newEmail = `${user}@${selectedDomain}`;
+            current_email = newEmail;
+            document.getElementById("email-addr").innerText = newEmail;
+
+            const url =
+                `${API_URL}?f=set_email_user&email_user=${encodeURIComponent(user)}&lang=en&site=${encodeURIComponent(selectedDomain)}` +
+                `&sid=${encodeURIComponent(session_id)}&_t=${Date.now()}`;
+
             try {
                 const res = await fetch(url);
-                const data = await res.json();
-                
-                if(data.email_addr) {
-                    // Logic: Force display of picked domain
-                    const preferredEmail = `${user}@${selectedDomain}`;
-                    
-                    current_email = preferredEmail;
-                    session_id = data.sid_token; 
-                    
-                    localStorage.setItem("oor_mail_sid", session_id);
-                    localStorage.setItem("oor_mail_pref", current_email);
-                    
-                    document.getElementById('email-addr').innerText = current_email;
-                    toggleEditMode(); 
-                    
-                    renderList([]);
-                    checkInbox(); 
-                    showToast("Address Updated!");
-                } else {
-                    showToast("Domain unavailable");
+
+                // Only show error if status is 500
+                if (!res.ok) {
+                    if (res.status === 500) {
+                        showToast("Failed to set address");
+                    }
+                    return;
                 }
-            } catch(e) {
-                showToast("Failed to set address");
+
+                const data = await res.json();
+
+                if (data.sid_token) {
+                    session_id = data.sid_token;
+                    localStorage.setItem("oor_mail_sid", session_id);
+                }
+
+                toggleEditMode();
+                renderList([]);
+                checkInbox();
+
+                showToast("Address Updated!");
+            } catch (e) {
+                console.log("Set address error", e);
+            }
+        }
+
+        // Init inbox from ?mail=username@domain.com
+        async function initFromUrlMail(address) {
+            const parts = address.split("@");
+            if (parts.length !== 2) {
+                showToast("Invalid mail parameter");
+                return;
+            }
+
+            const user = parts[0].trim();
+            const domain = parts[1].trim().toLowerCase();
+
+            if (!DOMAINS.includes(domain)) {
+                showToast("Domain not supported");
+                return;
+            }
+
+            // Reset session completely for this deep link
+            localStorage.removeItem("oor_mail_sid");
+            session_id = "";
+            selectedDomain = domain;
+            current_email = address;
+
+            document.getElementById("email-addr").innerText = address;
+            renderDomainGrid();
+
+            const url =
+                `${API_URL}?f=set_email_user&email_user=${encodeURIComponent(user)}&lang=en&site=${encodeURIComponent(domain)}` +
+                `&_t=${Date.now()}`;
+
+            try {
+                const res = await fetch(url);
+
+                if (!res.ok) {
+                    if (res.status === 500) {
+                        showToast("Failed to open inbox");
+                    }
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.sid_token) {
+                    session_id = data.sid_token;
+                    localStorage.setItem("oor_mail_sid", session_id);
+                }
+
+                await checkInbox();
+            } catch (e) {
+                console.log("Deep link error", e);
             }
         }
 
         async function checkInbox() {
             if (!session_id) return;
 
-            const url = `${API_URL}?f=get_email_list&offset=0&sid=${session_id}&_t=${Date.now()}`;
+            const url =
+                `${API_URL}?f=get_email_list&offset=0&sid=${encodeURIComponent(session_id)}&_t=${Date.now()}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
                 const list = data.list || [];
                 renderList(list);
-            } catch (e) { console.log("Inbox sync error"); }
-            
-            refreshTimer = 10; 
+            } catch (e) {
+                console.log("Inbox sync error", e);
+            }
+
+            // reset timer to 10s visually
+            refreshTimer = 10;
+            const t = document.getElementById("timer-text");
+            if (t) t.innerText = `Update in ${refreshTimer}s`;
         }
 
         async function openEmail(id) {
             showToast("Loading...");
-            const url = `${API_URL}?f=fetch_email&sid=${session_id}&email_id=${id}&_t=${Date.now()}`;
-            
+            const url =
+                `${API_URL}?f=fetch_email&sid=${encodeURIComponent(session_id)}&email_id=${encodeURIComponent(id)}&_t=${Date.now()}`;
+
             try {
                 const res = await fetch(url);
                 const data = await res.json();
 
-                document.getElementById('read-subject').innerText = decodeHtml(data.mail_subject);
-                document.getElementById('read-sender').innerText = data.mail_from;
-                document.getElementById('read-date').innerText = formatTimeIST(data.mail_date); 
-                document.getElementById('read-body').innerHTML = data.mail_body;
+                document.getElementById("read-subject").innerText =
+                    decodeHtml(data.mail_subject || "");
+                document.getElementById("read-sender").innerText = data.mail_from || "";
+                document.getElementById("read-date").innerText =
+                    formatTimeIST(data.mail_date);
 
-                document.getElementById('view-read').classList.add('active');
-                
+                const cleaned = cleanEmailHtml(data.mail_body || "");
+                document.getElementById("read-body").innerHTML = cleaned;
+
+                document.getElementById("view-read").classList.add("active");
+
                 const row = document.getElementById(`mail-${id}`);
-                if(row) row.classList.remove('unread');
-                
-            } catch (e) { showToast("Failed to load content"); }
+                if (row) row.classList.remove("unread");
+            } catch (e) {
+                showToast("Failed to load content");
+            }
         }
 
-        // --- TIMER ---
+        // --- TIMERS (fixed to never go negative) ---
         function startCountdown() {
-            if(countdownId) clearInterval(countdownId);
+            if (countdownId) clearInterval(countdownId);
+
+            const timerEl = document.getElementById("timer-text");
+            if (timerEl) timerEl.innerText = `Update in ${refreshTimer}s`;
+
             countdownId = setInterval(() => {
-                refreshTimer--;
-                // Monospace formatting for timer
-                document.getElementById('timer-text').innerText = `00:${refreshTimer.toString().padStart(2, '0')}`;
-                if(refreshTimer <= 0) {
-                    checkInbox();
+                if (refreshTimer <= 0) {
+                    refreshTimer = 10;    // reset
+                    checkInbox();         // async refresh (also resets text)
+                } else {
+                    refreshTimer--;
+                    if (timerEl) timerEl.innerText = `Update in ${refreshTimer}s`;
                 }
             }, 1000);
         }
 
         // --- UI ---
         function renderDomainGrid() {
-            const grid = document.getElementById('domain-list');
+            const grid = document.getElementById("domain-list");
             grid.innerHTML = "";
-            DOMAINS.forEach(d => {
-                const chip = document.createElement('div');
-                chip.className = `domain-chip ${d === selectedDomain ? 'selected' : ''}`;
+            DOMAINS.forEach((d) => {
+                const chip = document.createElement("div");
+                chip.className = `domain-chip ${d === selectedDomain ? "selected" : ""}`;
                 chip.innerText = d;
                 chip.onclick = () => {
                     selectedDomain = d;
-                    renderDomainGrid(); 
+                    renderDomainGrid();
                 };
                 grid.appendChild(chip);
             });
         }
 
         function renderList(emails) {
-            const ul = document.getElementById('email-list');
-            const empty = document.getElementById('empty-state');
+            const ul = document.getElementById("email-list");
+            const empty = document.getElementById("empty-state");
 
-            ul.innerHTML = ""; 
+            ul.innerHTML = "";
 
             if (emails.length === 0) {
-                empty.classList.remove('hidden');
+                empty.classList.remove("hidden");
                 return;
             }
 
-            empty.classList.add('hidden');
+            empty.classList.add("hidden");
 
-            emails.forEach(mail => {
-                const li = document.createElement('li');
+            emails.forEach((mail) => {
+                const li = document.createElement("li");
                 const isUnread = mail.mail_read == 0;
                 li.id = `mail-${mail.mail_id}`;
-                li.className = `email-item ${isUnread ? 'unread' : 'read'}`;
+                li.className = `email-item ${isUnread ? "unread" : "read"}`;
                 li.onclick = () => openEmail(mail.mail_id);
                 li.innerHTML = `
                     <div class="meta-row">
@@ -543,36 +1016,88 @@
         }
 
         function formatTimeIST(dateStr, short = false) {
-            if(!dateStr) return "";
+            if (!dateStr) return "";
             const parts = dateStr.split(" ");
-            if(parts.length > 1) {
+            if (parts.length > 1) {
                 let [h, m] = parts[1].split(":");
                 const ampm = h >= 12 ? "PM" : "AM";
-                h = h % 12 || 12; 
-                if(short) return `${h}:${m} ${ampm}`; 
-                return `${parts[0]} ${h}:${m} ${ampm}`; 
+                h = h % 12 || 12;
+
+                if (short) return `${h}:${m} ${ampm}`;
+
+                return `${parts[0]} ${h}:${m} ${ampm}`;
             }
             return dateStr;
         }
 
-        function toggleEditMode() { document.getElementById('edit-mode').classList.toggle('show'); }
-        
-        // --- MODAL LOGIC ---
-        function openModal() { document.getElementById('modal-confirm').classList.add('active'); }
-        function closeModal() { document.getElementById('modal-confirm').classList.remove('active'); }
+        function toggleEditMode() {
+            document.getElementById("edit-mode").classList.toggle("show");
+        }
+
+        // New ID flow with custom modal
+        function createNewId() {
+            document.getElementById("confirm-overlay").classList.remove("hidden");
+        }
+
+        function closeConfirmNewId() {
+            document.getElementById("confirm-overlay").classList.add("hidden");
+        }
+
         function confirmNewId() {
             localStorage.removeItem("oor_mail_sid");
-            localStorage.removeItem("oor_mail_pref");
             session_id = "";
             location.reload();
         }
-        
-        function closeEmail() { document.getElementById('view-read').classList.remove('active'); }
-        function copyEmail() { navigator.clipboard.writeText(current_email); showToast("Address Copied"); }
-        function showToast(msg) {
-            const t = document.getElementById('toast'); t.innerText = msg; t.className = "show"; setTimeout(() => { t.className = ""; }, 3000);
+
+        function closeEmail() {
+            document.getElementById("view-read").classList.remove("active");
         }
-        function decodeHtml(html) { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; }
+
+        function copyEmail() {
+            navigator.clipboard.writeText(current_email);
+            showToast("Address Copied");
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "show";
+            setTimeout(() => {
+                t.className = "";
+            }, 3000);
+        }
+
+        function decodeHtml(html) {
+            const txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
+
+        // Clean email HTML: remove scripts/styles/head stuff, keep body content & images
+        function cleanEmailHtml(rawHtml) {
+            if (!rawHtml) return "";
+
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(rawHtml, "text/html");
+
+                // remove dangerous / layout-breaking nodes
+                doc.querySelectorAll("script, style, link, meta, title, base").forEach(el => el.remove());
+
+                // normalize images (make them responsive)
+                doc.querySelectorAll("img").forEach(img => {
+                    img.removeAttribute("width");
+                    img.removeAttribute("height");
+                    img.setAttribute("loading", "lazy");
+                });
+
+                // return body content or fallback
+                return (doc.body && doc.body.innerHTML) || rawHtml;
+            } catch (e) {
+                console.log("Clean email HTML error", e);
+                return rawHtml;
+            }
+        }
 
         init();
     </script>
