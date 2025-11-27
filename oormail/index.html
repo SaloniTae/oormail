@@ -782,6 +782,7 @@
         let selectedDomain = DOMAINS[0];
         let refreshTimer = 10;
         let countdownId;
+        let isDeepLink = false; // track if page loaded via ?mail=...
 
         document.getElementById("copyright").innerText =
             `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
@@ -791,6 +792,7 @@
 
             const params = new URLSearchParams(window.location.search);
             const urlMail = params.get("mail");
+            isDeepLink = !!urlMail;
 
             if (urlMail) {
                 // Deep link via ?mail=username@domain.com
@@ -862,6 +864,12 @@
                     localStorage.setItem("oor_mail_sid", session_id);
                 }
 
+                // If we were on a deep-link (?mail=...), switch to "normal" mode now
+                if (isDeepLink && window.history && window.history.pushState) {
+                    isDeepLink = false;
+                    history.pushState({}, "", window.location.pathname);
+                }
+
                 toggleEditMode();
                 renderList([]);
                 checkInbox();
@@ -920,6 +928,7 @@
 
                 await checkInbox();
             } catch (e) {
+                console.log("Deep link error", e);
             }
         }
 
@@ -1068,6 +1077,14 @@
         function confirmNewId() {
             localStorage.removeItem("oor_mail_sid");
             session_id = "";
+            current_email = "";
+
+            // If we came from a deep-link, drop ?mail= from URL so it behaves like index
+            if (isDeepLink && window.history && window.history.pushState) {
+                isDeepLink = false;
+                history.pushState({}, "", window.location.pathname);
+            }
+
             location.reload();
         }
 
