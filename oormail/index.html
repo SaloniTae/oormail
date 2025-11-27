@@ -46,11 +46,23 @@
 
         .app-wrapper {
             width: 100%;
-            max-width: 680px;
+            max-width: 720px;
             display: flex;
             flex-direction: column;
             gap: 22px;
             position: relative;
+        }
+
+        @media (min-width: 1024px) {
+            .app-wrapper {
+                max-width: 880px;
+            }
+            .card {
+                padding: 24px 22px 22px;
+            }
+            .inbox-card {
+                min-height: 420px;
+            }
         }
 
         .logo-container {
@@ -82,7 +94,7 @@
 
         /* inbox card taller & flex so empty state can center */
         .inbox-card {
-            min-height: 360px; /* increased height from below */
+            min-height: 360px;
             display: flex;
             flex-direction: column;
         }
@@ -97,12 +109,12 @@
             display: block;
         }
 
-        /* titles for "Current Address" & "Inbox" – no hyphen line now */
+        /* titles for "Current Address" & "Inbox" – improved contrast and size */
         .section-title {
-            font-size: 12px;
-            letter-spacing: 0.16em;
-            color: #c0c0c0;
-            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.18em;
+            color: #e5e5e5;
+            font-weight: 700;
         }
 
         /* fix alignment of Inbox text inside header */
@@ -297,7 +309,7 @@
         .inbox-header {
             display: flex;
             justify-content: space-between;
-            align-items: center; /* align text & timer properly */
+            align-items: center;
             margin-bottom: 12px;
             padding-bottom: 10px;
             border-bottom: 1px solid var(--border);
@@ -315,6 +327,13 @@
             border: 1px solid rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .refresh-pill span:not(.dot) {
+            display: flex;
+            align-items: center;
         }
 
         .dot {
@@ -405,9 +424,9 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;   /* horizontally */
-            justify-content: center; /* vertically within remaining space */
-            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             color: var(--text-dim);
             text-align: center;
             width: 100%;
@@ -418,12 +437,15 @@
         }
 
         .empty-state svg {
-            opacity: 0.7;
+            opacity: 0.8;
+            width: 56px;
+            height: 56px;
         }
 
         .empty-state div {
-            font-size: 13px;
-            letter-spacing: 0.02em;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.03em;
             text-align: center;
         }
 
@@ -483,7 +505,9 @@
 
         .meta-line {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
+            align-items: baseline;
+            gap: 8px;
             font-size: 13px;
             margin-bottom: 4px;
             color: var(--text-dim);
@@ -683,8 +707,6 @@
                 <div id="empty-state" class="empty-state">
                     <svg
                         viewBox="0 0 24 24"
-                        width="40"
-                        height="40"
                         stroke="#444"
                         fill="none"
                         stroke-width="1.5"
@@ -718,10 +740,10 @@
                 <div class="read-subject-lg" id="read-subject">...</div>
                 <div class="read-meta-box">
                     <div class="meta-line">
-                        From: <span class="meta-val" id="read-sender">...</span>
+                        <span>From:</span> <span class="meta-val" id="read-sender">...</span>
                     </div>
                     <div class="meta-line">
-                        Date: <span class="meta-val" id="read-date">...</span>
+                        <span>Date:</span> <span class="meta-val" id="read-date">...</span>
                     </div>
                 </div>
                 <div class="email-body" id="read-body"></div>
@@ -898,7 +920,6 @@
 
                 await checkInbox();
             } catch (e) {
-                console.log("Deep link error", e);
             }
         }
 
@@ -963,7 +984,8 @@
                     checkInbox();         // async refresh (also resets text)
                 } else {
                     refreshTimer--;
-                    if (timerEl) timerEl.innerText = `Update in ${refreshTimer}s`;
+                    const t = document.getElementById("timer-text");
+                    if (t) t.innerText = `Update in ${refreshTimer}s`;
                 }
             }, 1000);
         }
