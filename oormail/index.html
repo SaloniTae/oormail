@@ -293,6 +293,11 @@
             justify-content: center;
         }
 
+        /* 5th button uses full row (size of 2 columns combined) */
+        .domain-grid .domain-chip:nth-child(5) {
+            grid-column: 1 / -1;
+        }
+
         .domain-chip.selected {
             background: var(--btn-white);
             color: black;
@@ -643,9 +648,7 @@
             >
         </div>
 
-        <!-- HOME VIEW -->
         <div id="view-inbox">
-            <!-- ADDRESS CARD -->
             <div class="card" style="margin-bottom: 10px;">
                 <span class="label-small section-title">CURRENT ADDRESS</span>
 
@@ -666,7 +669,6 @@
                     <button class="btn btn-danger" onclick="createNewId()">New ID</button>
                 </div>
 
-                <!-- EDIT MODE -->
                 <div id="edit-mode">
                     <span class="label-small" style="margin-bottom: 8px;">Username</span>
                     <div class="input-wrapper">
@@ -691,7 +693,6 @@
                 </div>
             </div>
 
-            <!-- INBOX LIST -->
             <div class="card inbox-card">
                 <div class="inbox-header">
                     <span class="label-small section-title">INBOX</span>
@@ -703,7 +704,6 @@
 
                 <ul id="email-list" class="email-list"></ul>
 
-                <!-- Empty State Separated -->
                 <div id="empty-state" class="empty-state">
                     <svg
                         viewBox="0 0 24 24"
@@ -721,7 +721,6 @@
             </div>
         </div>
 
-        <!-- READ VIEW OVERLAY -->
         <div id="view-read">
             <div class="app-wrapper" style="margin: 0 auto;">
                 <div class="read-nav">
@@ -757,7 +756,6 @@
 
     <div id="toast">Copied</div>
 
-    <!-- New ID Confirm Modal -->
     <div id="confirm-overlay" class="modal-overlay hidden">
         <div class="modal-card">
             <div class="modal-title">Generate new address?</div>
@@ -774,15 +772,71 @@
     <script>
         const API_URL = "https://oormail-services.by-oor.workers.dev/ajax.php";
 
-        // Stable domains
-        const DOMAINS = ["sharklasers.com", "guerrillamail.com", "guerrillamail.info", "grr.la"];
+        // Allowed display/select domains
+        const DOMAINS = ["sharklasers.com", "guerrillamail.com", "pokemail.net", "spam4.me", "grr.la"];
+
+        // 1. UPDATED: Logic to cycle to the next domain sequentially
+        function getNextDomain() {
+            // If current selected is in list, move to next index.
+            // If not found, default to first.
+            if (!selectedDomain || !DOMAINS.includes(selectedDomain)) {
+                 return DOMAINS[0];
+            }
+            const idx = DOMAINS.indexOf(selectedDomain);
+            const nextIdx = (idx + 1) % DOMAINS.length; // Modulo handles looping back to 0
+            return DOMAINS[nextIdx];
+        }
+
+        // Persisted random domain used to mask guerrillamailblock.com
+        let displayDomainOverride = localStorage.getItem("oor_mail_display_domain") || "";
+
+        // Beautify Guerrilla's "block" domain to a nice allowed one for display/copy
+        function beautifyEmail(email) {
+            if (!email) return "";
+            const parts = email.split("@");
+            if (parts.length !== 2) return email;
+
+            const [local, domain] = parts;
+            const d = domain.toLowerCase();
+
+            // If Guerrilla returns block domain, map to a stored domain override
+            if (d === "guerrillamailblock.com") {
+                if (!displayDomainOverride) {
+                    displayDomainOverride = getNextDomain(); // Use cycle logic
+                    localStorage.setItem("oor_mail_display_domain", displayDomainOverride);
+                }
+                return `${local}@${displayDomainOverride}`;
+            }
+
+            // If Guerrilla returns a good allowed domain, we remember it too
+            if (DOMAINS.includes(d)) {
+                displayDomainOverride = d;
+                localStorage.setItem("oor_mail_display_domain", displayDomainOverride);
+            }
+
+            return email;
+        }
+
+        // 2. NEW: Logic to sync the UI Select buttons with the current address
+        function syncDomainFromEmail(email) {
+            if (!email) return;
+            const parts = email.split("@");
+            if (parts.length === 2) {
+                const domain = parts[1].toLowerCase();
+                // Check if this domain is in our list
+                if (DOMAINS.includes(domain)) {
+                    selectedDomain = domain;
+                    renderDomainGrid(); // Re-draw buttons to show active state
+                }
+            }
+        }
 
         let session_id = localStorage.getItem("oor_mail_sid") || "";
         let current_email = "";
         let selectedDomain = DOMAINS[0];
         let refreshTimer = 10;
         let countdownId;
-        let isDeepLink = false; // track if page loaded via ?mail=...
+        let isDeepLink = false;
 
         document.getElementById("copyright").innerText =
             `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
@@ -803,7 +857,8 @@
                     await checkInbox();
                     await getEmailAddress();
                 } else {
-                    await getEmailAddress();
+                    // NEW: If starting fresh, try to create branded address (from old code logic)
+                    await createBrandedAddress();
                 }
             }
 
@@ -821,7 +876,12 @@
                 const data = await res.json();
 
                 if (data.email_addr) {
-                    current_email = data.email_addr;
+                    const raw = data.email_addr;
+                    current_email = beautifyEmail(raw);
+
+                    // Sync the buttons to this loaded address
+                    syncDomainFromEmail(current_email);
+
                     if (data.sid_token) {
                         session_id = data.sid_token;
                         localStorage.setItem("oor_mail_sid", session_id);
@@ -833,14 +893,82 @@
             }
         }
 
+        // Added back: Branded address logic
+        async function createBrandedAddress() {
+            try {
+                // USE CYCLE LOGIC
+                selectedDomain = getNextDomain();
+                renderDomainGrid();
+
+                const emailLabel = document.getElementById("email-addr");
+                if (emailLabel) emailLabel.innerText = "Generating...";
+
+                // call name generator
+                const genRes = await fetch(`${API_URL}?f=generate_oor_name&_t=${Date.now()}`);
+                let genData = {};
+                try {
+                    genData = await genRes.json();
+                } catch {
+                    genData = {};
+                }
+
+                let user = "";
+                if (genData && genData.ok && genData.id) {
+                    user = genData.id;
+                } else {
+                    user = `oor${Math.random().toString(36).slice(2, 10)}`;
+                }
+
+                const url =
+                    `${API_URL}?f=set_email_user&email_user=${encodeURIComponent(user)}&lang=en&site=${encodeURIComponent(selectedDomain)}` +
+                    `&_t=${Date.now()}`;
+
+                const res = await fetch(url);
+
+                if (!res.ok) {
+                    if (res.status === 500) {
+                        showToast("Failed to create address");
+                    }
+                    current_email = beautifyEmail(`${user}@${selectedDomain}`);
+                    document.getElementById("email-addr").innerText = current_email;
+                    syncDomainFromEmail(current_email);
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.sid_token) {
+                    session_id = data.sid_token;
+                    localStorage.setItem("oor_mail_sid", session_id);
+                }
+
+                const raw = data.email_addr || `${user}@${selectedDomain}`;
+                current_email = beautifyEmail(raw);
+
+                syncDomainFromEmail(current_email);
+                document.getElementById("email-addr").innerText = current_email;
+
+                renderList([]);
+                await checkInbox();
+            } catch (e) {
+                console.log("Branded init error", e);
+                showToast("Connection error");
+                const fallbackUser = `oor${Math.random().toString(36).slice(2, 10)}`;
+                current_email = beautifyEmail(`${fallbackUser}@${selectedDomain}`);
+                document.getElementById("email-addr").innerText = current_email;
+                syncDomainFromEmail(current_email);
+            }
+        }
+
         async function setCustomEmail() {
             const user = document.getElementById("custom-user").value.trim();
             if (!user) return showToast("Enter a username");
 
-            // Immediately reflect chosen address
-            const newEmail = `${user}@${selectedDomain}`;
-            current_email = newEmail;
-            document.getElementById("email-addr").innerText = newEmail;
+            // Optimistic update
+            const newEmailRaw = `${user}@${selectedDomain}`;
+            current_email = beautifyEmail(newEmailRaw);
+            document.getElementById("email-addr").innerText = current_email;
+            syncDomainFromEmail(current_email);
 
             const url =
                 `${API_URL}?f=set_email_user&email_user=${encodeURIComponent(user)}&lang=en&site=${encodeURIComponent(selectedDomain)}` +
@@ -849,7 +977,6 @@
             try {
                 const res = await fetch(url);
 
-                // Only show error if status is 500
                 if (!res.ok) {
                     if (res.status === 500) {
                         showToast("Failed to set address");
@@ -864,7 +991,6 @@
                     localStorage.setItem("oor_mail_sid", session_id);
                 }
 
-                // If we were on a deep-link (?mail=...), switch to "normal" mode now
                 if (isDeepLink && window.history && window.history.pushState) {
                     isDeepLink = false;
                     history.pushState({}, "", window.location.pathname);
@@ -896,13 +1022,18 @@
                 return;
             }
 
-            // Reset session completely for this deep link
             localStorage.removeItem("oor_mail_sid");
+            localStorage.removeItem("oor_mail_display_domain");
+            displayDomainOverride = "";
+
             session_id = "";
             selectedDomain = domain;
-            current_email = address;
+            current_email = beautifyEmail(address);
 
-            document.getElementById("email-addr").innerText = address;
+            // Sync UI
+            syncDomainFromEmail(current_email);
+
+            document.getElementById("email-addr").innerText = current_email;
             renderDomainGrid();
 
             const url =
@@ -947,7 +1078,6 @@
                 console.log("Inbox sync error", e);
             }
 
-            // reset timer to 10s visually
             refreshTimer = 10;
             const t = document.getElementById("timer-text");
             if (t) t.innerText = `Update in ${refreshTimer}s`;
@@ -980,7 +1110,7 @@
             }
         }
 
-        // --- TIMERS (fixed to never go negative) ---
+        // --- TIMERS ---
         function startCountdown() {
             if (countdownId) clearInterval(countdownId);
 
@@ -989,8 +1119,8 @@
 
             countdownId = setInterval(() => {
                 if (refreshTimer <= 0) {
-                    refreshTimer = 10;    // reset
-                    checkInbox();         // async refresh (also resets text)
+                    refreshTimer = 10;
+                    checkInbox();
                 } else {
                     refreshTimer--;
                     const t = document.getElementById("timer-text");
@@ -1065,7 +1195,6 @@
             document.getElementById("edit-mode").classList.toggle("show");
         }
 
-        // New ID flow with custom modal
         function createNewId() {
             document.getElementById("confirm-overlay").classList.remove("hidden");
         }
@@ -1074,18 +1203,31 @@
             document.getElementById("confirm-overlay").classList.add("hidden");
         }
 
+        // Updated New ID to trigger Branded Address creation instead of simple reload
         function confirmNewId() {
+            document.getElementById("confirm-overlay").classList.add("hidden");
+
             localStorage.removeItem("oor_mail_sid");
+            localStorage.removeItem("oor_mail_display_domain");
+            displayDomainOverride = "";
+
             session_id = "";
             current_email = "";
 
-            // If we came from a deep-link, drop ?mail= from URL so it behaves like index
             if (isDeepLink && window.history && window.history.pushState) {
                 isDeepLink = false;
                 history.pushState({}, "", window.location.pathname);
             }
 
-            location.reload();
+            renderList([]);
+            refreshTimer = 10;
+            const t = document.getElementById("timer-text");
+            if (t) t.innerText = `Update in ${refreshTimer}s`;
+            if (countdownId) clearInterval(countdownId);
+            startCountdown();
+
+            // Trigger the branded address creation logic
+            createBrandedAddress();
         }
 
         function closeEmail() {
@@ -1093,7 +1235,7 @@
         }
 
         function copyEmail() {
-            navigator.clipboard.writeText(current_email);
+            navigator.clipboard.writeText(current_email || "");
             showToast("Address Copied");
         }
 
@@ -1112,7 +1254,6 @@
             return txt.value;
         }
 
-        // Clean email HTML: remove scripts/styles/head stuff, keep body content & images
         function cleanEmailHtml(rawHtml) {
             if (!rawHtml) return "";
 
@@ -1120,17 +1261,14 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(rawHtml, "text/html");
 
-                // remove dangerous / layout-breaking nodes
                 doc.querySelectorAll("script, style, link, meta, title, base").forEach(el => el.remove());
 
-                // normalize images (make them responsive)
                 doc.querySelectorAll("img").forEach(img => {
                     img.removeAttribute("width");
                     img.removeAttribute("height");
                     img.setAttribute("loading", "lazy");
                 });
 
-                // return body content or fallback
                 return (doc.body && doc.body.innerHTML) || rawHtml;
             } catch (e) {
                 console.log("Clean email HTML error", e);
