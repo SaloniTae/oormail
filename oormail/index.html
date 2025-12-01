@@ -775,15 +775,29 @@
         // Allowed display/select domains
         const DOMAINS = ["sharklasers.com", "guerrillamail.com", "pokemail.net", "spam4.me", "grr.la"];
 
+        // NEW: key for remembering the actual branded email
+        const EMAIL_KEY = "oor_mail_email";
+
+        function rememberEmail(email) {
+            if (!email) return;
+            localStorage.setItem(EMAIL_KEY, email);
+        }
+
+        function getRememberedEmail() {
+            return localStorage.getItem(EMAIL_KEY) || "";
+        }
+
+        function clearRememberedEmail() {
+            localStorage.removeItem(EMAIL_KEY);
+        }
+
         // 1. UPDATED: Logic to cycle to the next domain sequentially
         function getNextDomain() {
-            // If current selected is in list, move to next index.
-            // If not found, default to first.
             if (!selectedDomain || !DOMAINS.includes(selectedDomain)) {
                  return DOMAINS[0];
             }
             const idx = DOMAINS.indexOf(selectedDomain);
-            const nextIdx = (idx + 1) % DOMAINS.length; // Modulo handles looping back to 0
+            const nextIdx = (idx + 1) % DOMAINS.length;
             return DOMAINS[nextIdx];
         }
 
@@ -799,16 +813,14 @@
             const [local, domain] = parts;
             const d = domain.toLowerCase();
 
-            // If Guerrilla returns block domain, map to a stored domain override
             if (d === "guerrillamailblock.com") {
                 if (!displayDomainOverride) {
-                    displayDomainOverride = getNextDomain(); // Use cycle logic
+                    displayDomainOverride = getNextDomain();
                     localStorage.setItem("oor_mail_display_domain", displayDomainOverride);
                 }
                 return `${local}@${displayDomainOverride}`;
             }
 
-            // If Guerrilla returns a good allowed domain, we remember it too
             if (DOMAINS.includes(d)) {
                 displayDomainOverride = d;
                 localStorage.setItem("oor_mail_display_domain", displayDomainOverride);
@@ -823,10 +835,9 @@
             const parts = email.split("@");
             if (parts.length === 2) {
                 const domain = parts[1].toLowerCase();
-                // Check if this domain is in our list
                 if (DOMAINS.includes(domain)) {
                     selectedDomain = domain;
-                    renderDomainGrid(); // Re-draw buttons to show active state
+                    renderDomainGrid();
                 }
             }
         }
@@ -841,6 +852,7 @@
         document.getElementById("copyright").innerText =
             `© ${new Date().getFullYear()} OORverse. All rights reserved.`;
 
+        // UPDATED INIT: prefer remembered email over SID
         async function init() {
             renderDomainGrid();
 
@@ -848,18 +860,21 @@
             const urlMail = params.get("mail");
             isDeepLink = !!urlMail;
 
+            const storedEmail = getRememberedEmail();
+
             if (urlMail) {
                 // Deep link via ?mail=username@domain.com
                 await initFromUrlMail(urlMail);
+            } else if (storedEmail) {
+                // We have a branded email from this browser -> rebind to that
+                await initFromUrlMail(storedEmail);
+            } else if (session_id) {
+                // Fallback: old behaviour if no stored email yet
+                await checkInbox();
+                await getEmailAddress();
             } else {
-                // Normal flow (existing session or new)
-                if (session_id) {
-                    await checkInbox();
-                    await getEmailAddress();
-                } else {
-                    // NEW: If starting fresh, try to create branded address (from old code logic)
-                    await createBrandedAddress();
-                }
+                // Fresh visit: create branded address
+                await createBrandedAddress();
             }
 
             startCountdown();
@@ -879,7 +894,8 @@
                     const raw = data.email_addr;
                     current_email = beautifyEmail(raw);
 
-                    // Sync the buttons to this loaded address
+                    // remember what backend gave us (in case this was first time)
+                    rememberEmail(current_email);
                     syncDomainFromEmail(current_email);
 
                     if (data.sid_token) {
@@ -893,17 +909,15 @@
             }
         }
 
-        // Added back: Branded address logic
+        // Branded address logic
         async function createBrandedAddress() {
             try {
-                // USE CYCLE LOGIC
                 selectedDomain = getNextDomain();
                 renderDomainGrid();
 
                 const emailLabel = document.getElementById("email-addr");
                 if (emailLabel) emailLabel.innerText = "Generating...";
 
-                // call name generator
                 const genRes = await fetch(`${API_URL}?f=generate_oor_name&_t=${Date.now()}`);
                 let genData = {};
                 try {
@@ -929,9 +943,11 @@
                     if (res.status === 500) {
                         showToast("Failed to create address");
                     }
-                    current_email = beautifyEmail(`${user}@${selectedDomain}`);
+                    const fallbackRaw = `${user}@${selectedDomain}`;
+                    current_email = beautifyEmail(fallbackRaw);
                     document.getElementById("email-addr").innerText = current_email;
                     syncDomainFromEmail(current_email);
+                    rememberEmail(current_email);
                     return;
                 }
 
@@ -947,6 +963,7 @@
 
                 syncDomainFromEmail(current_email);
                 document.getElementById("email-addr").innerText = current_email;
+                rememberEmail(current_email);
 
                 renderList([]);
                 await checkInbox();
@@ -957,6 +974,7 @@
                 current_email = beautifyEmail(`${fallbackUser}@${selectedDomain}`);
                 document.getElementById("email-addr").innerText = current_email;
                 syncDomainFromEmail(current_email);
+                rememberEmail(current_email);
             }
         }
 
@@ -964,11 +982,11 @@
             const user = document.getElementById("custom-user").value.trim();
             if (!user) return showToast("Enter a username");
 
-            // Optimistic update
             const newEmailRaw = `${user}@${selectedDomain}`;
             current_email = beautifyEmail(newEmailRaw);
             document.getElementById("email-addr").innerText = current_email;
             syncDomainFromEmail(current_email);
+            rememberEmail(current_email);
 
             const url =
                 `${API_URL}?f=set_email_user&email_user=${encodeURIComponent(user)}&lang=en&site=${encodeURIComponent(selectedDomain)}` +
@@ -1032,8 +1050,8 @@
 
             // Sync UI
             syncDomainFromEmail(current_email);
-
             document.getElementById("email-addr").innerText = current_email;
+            rememberEmail(current_email);
             renderDomainGrid();
 
             const url =
@@ -1210,6 +1228,7 @@
             localStorage.removeItem("oor_mail_sid");
             localStorage.removeItem("oor_mail_display_domain");
             displayDomainOverride = "";
+            clearRememberedEmail();
 
             session_id = "";
             current_email = "";
@@ -1226,7 +1245,6 @@
             if (countdownId) clearInterval(countdownId);
             startCountdown();
 
-            // Trigger the branded address creation logic
             createBrandedAddress();
         }
 
